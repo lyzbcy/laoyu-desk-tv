@@ -11,17 +11,18 @@ const {displayAccelerator}=require('../core/hotkey');
 const {createLogger}=require('../core/logger');
 const {createUpdater,RELEASE_PAGE,confirmRestart}=require('./updater');
 const {openControls,sendControls}=require('./controls');
+const {createPrivacy}=require('./privacy');
 const smoke=process.argv.includes('--paid-to-watch-smoke');
 if(smoke){app.disableHardwareAcceleration();const dir=fs.mkdtempSync(path.join(os.tmpdir(),'paid-to-watch-smoke-'));app.setPath('userData',dir);}
 else app.setPath('userData',path.join(app.getPath('appData'),'paid-to-watch'));
 const ownsInstance=smoke||app.requestSingleInstanceLock();
 if(!ownsInstance)app.quit();
-let mainWindow,tray,liveView,config,state,logger,updater,callbacks;
+let mainWindow,tray,liveView,config,state,logger,updater,callbacks,privacy;
 let setupMode=false,savedBounds=null,liveLoaded=false,phase='idle',statusMessage='默认静音，可点击声音开关开启';
 const AD_H=70,TITLE_H=22,ADDR_H=32;
 const safeWindow=()=>mainWindow&&!mainWindow.isDestroyed();
 const record=(level,event,fields)=>logger?.log(level,event,fields);
-function controlState(){const message=['loading','error'].includes(phase)?statusMessage:(state.liveOn?'网页播放：'+(state.liveMuted?'静音':'声音已开启'):'本地视频：'+(state.localMuted?'静音':'声音已开启'));return {version:app.getVersion(),platform:process.platform,architecture:process.arch,player:viewState(state),hotkey:displayAccelerator(config.hotkey),phase,message,updater:updater?.snapshot()};}
+function controlState(){const message=['loading','error'].includes(phase)?statusMessage:(state.liveOn?'网页播放：'+(state.liveMuted?'静音':'声音已开启'):'本地视频：'+(state.localMuted?'静音':'声音已开启'));return {version:app.getVersion(),platform:process.platform,architecture:process.arch,player:viewState(state),hotkey:displayAccelerator(config.hotkey),phase,message,updater:updater?.snapshot(),privacy:privacy?.snapshot()};}
 function updateView(){
   if(liveView){const s=viewState(state);liveView.webContents.setAudioMuted(s.effectiveLiveMuted);liveView.setBounds(s.liveVisible?stageBounds():{x:0,y:0,width:0,height:0});}
   if(safeWindow())mainWindow.webContents.send('player-state',controlState());
@@ -36,12 +37,14 @@ function setPreference(action,key,value){
   config=next;dispatch(action);record('info','audio.preference',{source:key==='muted'?'local':'live',ok:!value});return true;
 }
 function toggleSound(){return state.liveOn?setPreference({type:'live-sound',value:state.liveMuted},'liveMuted',!state.liveMuted):setPreference({type:'local-sound',value:state.localMuted},'muted',!state.localMuted);}
-function toggleBoss(){dispatch({type:'toggle-boss'});record('info','player.boss',{ok:state.bossOn});}
+function toggleBoss(){if(config.privacyEnabled!==false&&privacy?.snapshot().level==='fail'&&state.bossOn){statusMessage='无感自检未通过，请先在设置中重试或关闭保护';phase='error';updateView();return;}dispatch({type:'toggle-boss'});record('info','player.boss',{ok:state.bossOn});}
 function registerHotkey(accel){return smoke?true:globalShortcut.register(accel,()=>{if(safeWindow())toggleBoss();});}
 function openPanel(){return openControls(controlState,{show:!smoke});}
 ipcMain.handle('get-config',()=>config);
 ipcMain.handle('get-player-state',()=>controlState());
 ipcMain.handle('get-control-state',()=>controlState());
+ipcMain.handle('set-privacy',(_event,key,value)=>{if(!['privacyEnabled','autoPrivacyCheck'].includes(key)||typeof value!=='boolean')throw Error('无感设置参数无效');const next={...config,[key]:value};if(!saveConfig(next))throw Error('设置保存失败');config=next;privacy.refresh();return controlState();});
+ipcMain.handle('privacy-check',async()=>{await privacy.run();return controlState();});
 ipcMain.handle('toggle-sound',()=>{toggleSound();return controlState();});
 ipcMain.handle('open-controls',()=>{openPanel();return true;});
 ipcMain.handle('set-sound',(_e,source,on)=>{
@@ -69,12 +72,12 @@ ipcMain.handle('check-update',()=>updater.check(true));
 ipcMain.handle('install-update',()=>updater.install());
 ipcMain.handle('open-release',()=>shell.openExternal(RELEASE_PAGE));
 ipcMain.handle('export-logs',async()=>{
-  const result=await dialog.showSaveDialog({title:'导出技术日志',defaultPath:'带薪看片-诊断.txt',filters:[{name:'文本',extensions:['txt']}]});
+  const result=await dialog.showSaveDialog({title:'导出技术日志',defaultPath:'捞鱼小窗-诊断.txt',filters:[{name:'文本',extensions:['txt']}]});
   if(result.canceled)return false;fs.writeFileSync(result.filePath,logger.summary(),'utf8');return true;
 });
 ipcMain.handle('feedback',async(_event,payload)=>{
   const note=String(payload?.note||'').slice(0,4000),category=String(payload?.category||'其他').slice(0,50);
-  const body=`软件：带薪看片\n版本：${app.getVersion()}\n平台：${process.platform}/${process.arch}\n分类：${category}\n\n${note}\n`+(payload?.includeLogs?'\n技术日志（不含媒体路径、网址或登录信息）：\n'+logger.summary():'');
+  const body=`软件：捞鱼小窗\n版本：${app.getVersion()}\n平台：${process.platform}/${process.arch}\n分类：${category}\n\n${note}\n`+(payload?.includeLogs?'\n技术日志（不含媒体路径、网址或登录信息）：\n'+logger.summary():'');
   clipboard.writeText(body);await shell.openExternal('https://github.com/lyzbcy/paid-to-watch/issues/new');return true;
 });
 function goToUrl(value){
@@ -91,8 +94,9 @@ app.on('activate',()=>{if(safeWindow())mainWindow.show();});
 if(ownsInstance)app.whenReady().then(async()=>{
   config=loadConfig();state=initialState(config);
   logger=createLogger(path.join(app.getPath('userData'),'logs'),{version:app.getVersion(),platform:process.platform});record('info','app.start');
+  privacy=createPrivacy({app,config:()=>config,mainWindow:()=>mainWindow,hotkeyReady:()=>!smoke&&globalShortcut.isRegistered(config.hotkey),logger,smoke,notify:()=>{if(privacy?.snapshot().level==='fail'&&config.privacyEnabled!==false){state=transition(state,{type:'privacy-failure'});phase='error';statusMessage='无感自检未通过，已遮挡并静音。请到设置查看。';}else if(phase==='error'&&statusMessage.startsWith('无感自检')){phase='idle';}updateView();}});
   if(process.platform==='win32')app.setAppUserModelId('com.laoyu.paidtowatch');
-  mainWindow=createMainWindow(config,{show:!smoke});if(process.platform==='darwin'&&!smoke)app.dock?.hide();
+  mainWindow=createMainWindow(config,{show:!smoke});privacy.apply(mainWindow);
   updater=createUpdater({app,config:()=>config,save:value=>{if(!saveConfig(value))return false;config=value;return true;},logger,notify:()=>updateView(),smoke});
   mainWindow.webContents.on('did-finish-load',updateView);mainWindow.webContents.on('render-process-gone',()=>record('error','renderer.gone'));
   let persistTimer;const persist=()=>{if(setupMode)return;clearTimeout(persistTimer);persistTimer=setTimeout(()=>{if(safeWindow()){config={...config,window:mainWindow.getBounds()};if(!saveConfig(config))record('warn','window.save-failed');}},200);};
@@ -108,10 +112,12 @@ if(ownsInstance)app.whenReady().then(async()=>{
     onPickFolder:()=>mainWindow.webContents.send('pick-folder-from-tray'),onToggleShow:()=>mainWindow.isVisible()?mainWindow.hide():mainWindow.show(),onSetHotkey:()=>openHotkeyWindow(),onOpenControls:openPanel,
     onToggleLocalSound:()=>setPreference({type:'local-sound',value:state.localMuted},'muted',!state.localMuted),onToggleLiveSound:()=>setPreference({type:'live-sound',value:state.liveMuted},'liveMuted',!state.liveMuted),
     onToggleLive:()=>{if(!state.liveOn&&!liveLoaded)goToUrl(config.liveUrl);else dispatch({type:'live',value:!state.liveOn});},
-    onToggleSetupMode:()=>{setupMode=!setupMode;if(setupMode){savedBounds=mainWindow.getBounds();presentWindow(mainWindow,true);mainWindow.setBounds(currentBounds(savedBounds,true));}else{presentWindow(mainWindow);if(savedBounds)mainWindow.setBounds(currentBounds(savedBounds));}mainWindow.webContents.send('setup-mode',setupMode);liveView.webContents.setZoomFactor(setupMode?1:0.6);updateView();},onSelectFavorite:goToUrl,
+    onToggleSetupMode:()=>{setupMode=!setupMode;if(setupMode){savedBounds=mainWindow.getBounds();presentWindow(mainWindow,true,config.privacyEnabled!==false);mainWindow.setBounds(currentBounds(savedBounds,true));}else{presentWindow(mainWindow,false,config.privacyEnabled!==false);if(savedBounds)mainWindow.setBounds(currentBounds(savedBounds));}privacy.apply(mainWindow);mainWindow.webContents.send('setup-mode',setupMode);liveView.webContents.setZoomFactor(setupMode?1:0.6);updateView();},onSelectFavorite:goToUrl,
   };
   tray=createTray(callbacks,{...viewState(state),setupMode,favoriteSites:config.favoriteSites,version:app.getVersion()});updateView();
+  if(!smoke){let visible=false;for(let i=0;i<300;i++){if(safeWindow()&&mainWindow.isVisible()&&!mainWindow.webContents.isLoading()){visible=true;break;}await new Promise(r=>setTimeout(r,100));}if(!visible)throw Error('window-not-visible');}
   await confirmRestart(app,logger).catch(()=>record('warn','updater.receipt-failed'));if(!smoke)updater.check(false).catch(()=>{});
+  privacy.schedule();
   if(smoke)require('../../scripts/ui-smoke').run({app,mainWindow,liveView,callbacks,dispatch,getState:controlState}).catch(e=>{console.error(e.stack);app.exit(2);});
-}).catch(error=>{record('error','app.start-failed',{code:error.code||'Startup'});if(smoke){console.error(error);app.exit(2);}else dialog.showErrorBox('带薪看片启动失败','请重新打开或到发布页下载完整软件包。');});
-app.on('window-all-closed',()=>app.quit());app.on('will-quit',()=>globalShortcut.unregisterAll());
+}).catch(error=>{record('error','app.start-failed',{code:error.code||'Startup'});if(smoke){console.error(error);app.exit(2);}else dialog.showErrorBox('捞鱼小窗启动失败','请重新打开或到发布页下载完整软件包。');});
+app.on('window-all-closed',()=>app.quit());app.on('will-quit',()=>{privacy?.dispose();globalShortcut.unregisterAll();});

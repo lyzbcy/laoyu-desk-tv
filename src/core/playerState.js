@@ -4,6 +4,7 @@ function initialState(config) {
 function transition(state, action) {
   switch (action.type) {
     case 'toggle-boss': return { ...state, bossOn: !state.bossOn };
+    case 'privacy-failure': return {...state,bossOn:true};
     case 'ended': return state.liveOn ? state : { ...state, bossOn: true };
     case 'live': return { ...state, liveOn: Boolean(action.value) };
     case 'local-sound': return { ...state, localMuted: !action.value };

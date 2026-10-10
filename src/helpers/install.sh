@@ -26,7 +26,7 @@ trap fail HUP INT TERM
 trap 'status=$?; [ "$status" -eq 0 ] || fail' EXIT
 case "$token" in *[!a-f0-9-]*|'') exit 1;; esac
 case "$old_pid" in *[!0-9]*|'') exit 1;; esac
-case "$target" in /*/带薪看片.app) ;; *) exit 1;; esac
+case "$target" in /*/带薪看片.app|/*/捞鱼小窗.app) ;; *) exit 1;; esac
 [ -d "$target/Contents" ] && [ -w "$parent" ] || fail
 actual_hash=$(/usr/bin/shasum -a 256 "$package" | /usr/bin/awk '{print $1}')
 [ "$actual_hash" = "$expected_hash" ] || fail

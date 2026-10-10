@@ -19,7 +19,7 @@ async function main(){
   assert(await evalAt(ui,"!document.querySelector('#install').hidden"));debug.close();debug=null;
   await evalAt(ui,"document.querySelector('#install').click();true");let receipt,pointer;
   for(let i=0;i<1800;i++){try{pointer=JSON.parse(fs.readFileSync(path.join(userData,'updates/pending.json')));receipt=JSON.parse(fs.readFileSync(path.join(userData,'updates','install-'+pointer.token,'result.json'),'utf8').replace(/^\uFEFF/,''));if(pointer.token!==previousToken){if(receipt.status==='restarted'&&receipt.version===version)break;if(receipt.status==='failed'&&pointer.version===version)throw Error('Update helper failed');}}catch(e){if(e.message==='Update helper failed')throw e;}await sleep(100);}
-  assert(exited,'old process exit');assert.equal(receipt?.status,'restarted');assert.equal(receipt.runningExe,exe);const after=JSON.parse(fs.readFileSync(configFile));
+  assert(exited,'old process exit');assert.equal(receipt?.status,'restarted');assert.equal(receipt.runningExe,path.join(path.dirname(exe),require('../src/core/branding').EXECUTABLE));const after=JSON.parse(fs.readFileSync(configFile));
   for(const key of ['videoFolder','hotkey','muted','liveMuted','liveUrl','favoriteSites'])assert.deepEqual(after[key],before[key],key+' preserved');
   const report={status:'passed',version,source:'real installed controls button/IPC and exact locally staged release bytes',installerSha256:sha256,oldExited:exited,settingsPreserved:true,receipt};fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
  }finally{debug?.close();ui?.close();server.close();}

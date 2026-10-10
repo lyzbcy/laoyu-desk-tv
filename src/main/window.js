@@ -4,9 +4,12 @@ const path = require('node:path');
 const { windowBounds } = require('../core/windowGeometry');
 
 function currentBounds(saved,setup=false){return windowBounds(saved,screen.getAllDisplays(),screen.getPrimaryDisplay().id,setup);}
-function presentWindow(win,setup=false){
+function presentWindow(win,setup=false,privacy=true){
+  win.__setupMode=setup;
   win.setAlwaysOnTop(!setup,'screen-saver');
-  win.setSkipTaskbar(!setup);
+  win.setSkipTaskbar(privacy&&!setup);
+  win.setFocusable(!privacy||setup);
+  win.setContentProtection(privacy);
   if(process.platform==='darwin')win.setVisibleOnAllWorkspaces(!setup,{visibleOnFullScreen:!setup});
 }
 
@@ -16,14 +19,15 @@ function createMainWindow(config,options={}) {
 
   const win = new BrowserWindow({
     width,
-    show: options.show !== false,
+    show: false,
     height,
     x,
     y,
     frame: false,
     alwaysOnTop: true,
     resizable: true,
-    skipTaskbar: true,
+    skipTaskbar: config.privacyEnabled!==false,
+    focusable: config.privacyEnabled===false,
     fullscreenable: false, // 网页里的播放器点"全屏"时,不让伪装窗口被拉成真全屏
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
@@ -33,8 +37,9 @@ function createMainWindow(config,options={}) {
       offscreen: options.show === false,
     },
   });
-  presentWindow(win);
+  presentWindow(win,false,config.privacyEnabled!==false);
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
+  if(options.show!==false)win.once('ready-to-show',()=>config.privacyEnabled===false?win.show():win.showInactive());
   return win;
 }
 

@@ -1,13 +1,13 @@
 ---
 name: paid-to-watch-dev
-description: 开发、修复、打包和维护带薪看片的 Windows/macOS 版本，包括声音、老板键、网页播放、日志、更新与捞鱼软件中心适配。
+description: 开发、修复、打包和维护捞鱼小窗（原带薪看片）的 Windows/macOS 版本，包括无感保护、自检、声音、老板键、日志、更新和软件中心适配。
 ---
 
-# 带薪看片开发入口
+# 捞鱼小窗开发入口
 
 ## 项目与技术
 
-伪装成右下角广告弹窗的本地视频/网页播放器。基于 a295371927-sys/paid-to-watch 二次开发，Electron 31、原生 JavaScript/CSS、electron-builder、Vitest；Windows x64、macOS x64/arm64。
+伪装成广告小窗的本地视频/网页播放器。基于 a295371927-sys/paid-to-watch 二次开发，Electron 44.7、原生 JavaScript/CSS、Koffi、electron-builder 26、Vitest 5；Windows x64、macOS x64/arm64。0.3.3更名捞鱼小窗，技术产品ID和设置目录仍paid-to-watch。
 
 ## 目录地图
 
@@ -24,11 +24,13 @@ description: 开发、修复、打包和维护带薪看片的 Windows/macOS 版�
 
 ## 版本与更新
 
-package.json.version是唯一版本源。当前0.3.0开发候选，正式上游仍0.2.1。读取 docs/updater.md：每天按上海日期检查正式新版，尝试/成功分别记录，手动可重试；版本较新且包SHA-256验证通过后，由用户点击安装并重启，失败保留旧版恢复路径。没有更新器的0.2.1须手动安装首次迁移。源码推送不是软件发布。
+package.json.version是唯一版本源。当前0.3.3候选；0.3.2曾正式发行，上游仍0.2.1。读取 docs/updater.md：每天按上海日期检查正式新版，尝试/成功分别记录，手动可重试；版本较新且包SHA-256验证通过后，由用户点击安装并重启，失败保留旧版恢复路径。没有更新器的0.2.1须手动安装首次迁移。改名更新必须验证旧入口兼容及严格重启回执，源码推送不是软件发布。
 
 ## 功能与验收
 
 本轮范围：Mac适配、声音可控、日志/反馈、自身更新、启动器接入。实现状态与真实证据以 docs/roadmap.md 为准，不能将设计当作完成。单测 npm test，隔离UI/构建命令见 docs/testing.md；启动器规范为 E:/共享/tools/软件开发/启动器适配/laoyu-launcher-adapter/SKILL.md，发布前严格自查并实际下载、识别、打开。
+
+新范围：学习lyzbcy-noone-knows-main落地无感与自检，先读docs/privacy.md；自动模式禁止可见校准色，完整捕获验证由用户触发。Windows旧名兼容入口由after-pack编译；Mac需同时制作新名称普通ZIP及原名更新ZIP，见docs/updater.md。不能删兼容入口、改稳定AppID/userData，或覆盖已经公开的同版本包。
 
 ## 红线
 

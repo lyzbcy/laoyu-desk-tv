@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('controls',{
  check:()=>ipcRenderer.invoke('check-update'),install:()=>ipcRenderer.invoke('install-update'),release:()=>ipcRenderer.invoke('open-release'),
  exportLogs:()=>ipcRenderer.invoke('export-logs'),feedback:payload=>ipcRenderer.invoke('feedback',payload),
  onState:callback=>ipcRenderer.on('control-state',(_event,state)=>callback(state)),
+ privacy:(key,value)=>ipcRenderer.invoke('set-privacy',key,value),selfCheck:()=>ipcRenderer.invoke('privacy-check'),
 });

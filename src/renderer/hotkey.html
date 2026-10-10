@@ -4,14 +4,16 @@
     <meta charset="utf-8" />
     <style>
       * { box-sizing: border-box; }
-      body { font-family: "Microsoft YaHei", sans-serif; padding: 16px; font-size: 13px; }
+      body { font-family: "Microsoft YaHei", sans-serif; margin:0;padding:18px; font-size: 13px;background:#f7f5ee;color:#292a24; }
+      .window-bar{-webkit-app-region:drag;margin:-18px -18px 18px;padding:8px 18px;background:#eeece2;color:#75786d}
       #current { font-weight: bold; }
       #preview { font-size: 18px; font-weight: bold; margin: 12px 0; min-height: 24px; }
       #error { color: #c00; font-size: 12px; min-height: 16px; }
-      button { margin-top: 8px; margin-right: 8px; padding: 4px 16px; }
+      button { margin-top: 8px; margin-right: 8px; padding: 8px 16px;border:0;border-radius:7px;background:#586d45;color:#fff;cursor:pointer; }button:disabled{opacity:.5}#cancel{background:#e6eade;color:#394332}
     </style>
   </head>
   <body>
+    <div class="window-bar">设置老板键</div>
     <p>当前老板键: <span id="current">...</span></p>
     <p>请按下新的组合键（Command / Ctrl / Option / Alt / Shift）：</p>
     <div id="preview">等待按键...</div>

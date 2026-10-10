@@ -4,8 +4,9 @@ const path = require('node:path');
 
 function openHotkeyWindow() {
   const win = new BrowserWindow({
-    width: 320,
-    height: 220,
+    width: 380,
+    height: 285,
+    frame: false,
     resizable: false,
     center: true,
     title: '设置老板键',

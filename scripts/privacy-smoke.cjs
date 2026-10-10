@@ -1,0 +1,11 @@
+// Real Windows DWM/user32/GDI acceptance; isolated state and own controlled windows only.
+const {app,BrowserWindow}=require('electron'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+const native=require('../src/main/nativePrivacy'),{probe}=require('../src/main/privacy');
+app.setPath('userData',fs.mkdtempSync(path.join(os.tmpdir(),'paid-privacy-')));
+app.whenReady().then(async()=>{let main;const timeout=setTimeout(()=>app.exit(2),40000);
+ try{main=new BrowserWindow({width:160,height:120,frame:false,show:false,focusable:false,skipTaskbar:true,webPreferences:{sandbox:true,nodeIntegration:false,contextIsolation:true}});main.setAlwaysOnTop(true,'screen-saver');await main.loadURL('data:text/html,<html style="background:%23192028"><body style="color:white">Isolated privacy fixture</body></html>');native.apply(main,true);main.showInactive();await new Promise(r=>setTimeout(r,250));native.apply(main,true);
+ native.toolWindow(main,true);const protectedState=native.inspect(main);assert(protectedState?.protected,'native protection');assert(protectedState.noActivate,'no activation');assert(protectedState.toolWindow,'Alt+Tab exclusion');const result=await probe(main);console.log('PROBE '+JSON.stringify(result));assert.equal(result.level,'pass',result.detail);
+ native.apply(main,false);assert.equal(native.inspect(main).protected,false,'disable removes native protection');native.apply(main,true);assert.equal(native.inspect(main).protected,true,'re-enable protection');
+ const report={status:'passed',platform:process.platform,electron:process.versions.electron,protectedState,probe:result,disableAndRestore:true,scope:'own controlled tiny probe; positive GDI baseline; native affinity readback; foreground invariant; no image file, user media or external submission'};const output=path.resolve(process.env.PAID_PRIVACY_OUTPUT||'verification/privacy-windows.json');fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+ }finally{clearTimeout(timeout);if(main&&!main.isDestroyed())main.destroy();app.quit();}
+}).catch(e=>{console.error(e);app.exit(2);});

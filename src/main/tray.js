@@ -29,13 +29,13 @@ function buildMenu(callbacks, state) {
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
     { label: '设置 / 遇到问题反馈', click: () => callbacks.onOpenControls() },
-    { label: `带薪看片 ${state.version || ''}`, enabled: false },
+    { label: `捞鱼小窗 ${state.version || ''}`, enabled: false },
   ]);
 }
 
 function createTray(callbacks, state) {
-  const tray = new Tray(path.join(__dirname, process.platform === 'darwin' ? '../../assets/trayTemplate.png' : '../../assets/tray.png'));
-  tray.setToolTip('带薪看片');
+  const tray = new Tray(path.join(__dirname, process.platform === 'darwin' ? '../../assets/trayTemplate.png' : '../../assets/icon.ico'));
+  tray.setToolTip('捞鱼小窗');
   tray.setContextMenu(buildMenu(callbacks, state));
   return tray;
 }

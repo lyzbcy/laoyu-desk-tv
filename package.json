@@ -1,6 +1,6 @@
 {
   "name": "paid-to-watch",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "伪装成右下角广告弹窗的本地视频摸鱼播放器",
   "main": "src/main/main.js",
   "license": "MIT",
@@ -10,17 +10,21 @@
     "test:watch": "vitest",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win nsis zip --x64 --publish never",
-    "dist:mac": "electron-builder --mac dmg zip --x64 --arm64 --publish never"
+    "dist:mac": "electron-builder --mac dmg zip --x64 --arm64 --publish never && node scripts/mac-update-zips.cjs"
   },
   "devDependencies": {
-    "electron": "^31.0.0",
-    "electron-builder": "^24.0.0",
-    "vitest": "^2.0.0"
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
   },
   "build": {
     "appId": "com.laoyu.paidtowatch",
-    "productName": "带薪看片",
+    "productName": "捞鱼小窗",
     "files": [
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
+      "README.md",
       "src/**/*",
       "assets/**/*",
       "scripts/ui-smoke.js",
@@ -28,6 +32,7 @@
     ],
     "artifactName": "paid-to-watch-${version}-${os}-${arch}.${ext}",
     "icon": "assets/icon.png",
+    "afterPack": "scripts/after-pack.cjs",
     "win": {
       "target": [
         "nsis",
@@ -36,12 +41,14 @@
       "signAndEditExecutable": true
     },
     "nsis": {
+      "include": "scripts/installer.nsh",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": "always",
+      "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "runAfterFinish": false
+      "runAfterFinish": false,
+      "uninstallDisplayName": "捞鱼小窗"
     },
     "mac": {
       "target": [
@@ -59,5 +66,8 @@
       "repo": "paid-to-watch"
     }
   },
-  "author": "捞鱼工作室"
+  "author": "捞鱼工作室",
+  "dependencies": {
+    "koffi": "3.1.0"
+  }
 }

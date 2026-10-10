@@ -6,6 +6,8 @@ const DEFAULT_CONFIG = {
   muted: true,
   liveUrl: 'https://tv.cctv.com/live/cctv5/',
   liveMuted: true,
+  privacyEnabled: true,
+  autoPrivacyCheck: true,
   favoriteSites: [
     { name: 'CCTV5 直播', url: 'https://tv.cctv.com/live/cctv5/' },
     { name: '咪咕视频', url: 'https://www.miguvideo.com/' },
@@ -20,6 +22,8 @@ function mergeConfig(saved) {
   return {
     ...DEFAULT_CONFIG,
     ...saved,
+    privacyEnabled: saved.privacyEnabled !== false,
+    autoPrivacyCheck: saved.autoPrivacyCheck !== false,
     window: { ...DEFAULT_CONFIG.window, ...(saved.window || {}) },
   };
 }

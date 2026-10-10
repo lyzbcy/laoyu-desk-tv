@@ -1,6 +1,8 @@
 const $=id=>document.getElementById(id);let current;
 function render(state){
  current=state;$('version').textContent=`${state.version} · ${state.platform}/${state.architecture}`;
+ const privacy=state.privacy||{};$('privacyEnabled').checked=privacy.enabled!==false;$('autoPrivacyCheck').checked=privacy.autoCheck!==false;$('privacyStatus').textContent=privacy.running?'正在静默自检…':privacy.summary||'保护状态尚未读取';$('privacyCheck').disabled=privacy.running||privacy.enabled===false;
+ $('privacyItems').replaceChildren(...(privacy.items||[]).map(item=>{const li=document.createElement('li');li.textContent=({pass:'通过',warning:'未完整验证',fail:'未通过'}[item.level]||'未验证')+' · '+item.label+'：'+item.detail;return li;}));
  $('localSound').checked=!state.player.localMuted;$('liveSound').checked=!state.player.liveMuted;
  $('playStatus').textContent=state.player.bossOn?'当前广告模式，所有声音已静音':state.message;
  $('hotkey').textContent='老板键：'+state.hotkey;
@@ -15,3 +17,6 @@ $('check').onclick=()=>action(()=>window.controls.check());$('install').onclick=
 $('export').onclick=async()=>{if(await action(()=>window.controls.exportLogs()))$('message').textContent='技术日志已导出';};
 $('feedback').onclick=async()=>{if(await action(()=>window.controls.feedback({category:$('category').value,note:$('note').value,includeLogs:$('includeLogs').checked})))$('message').textContent='内容已复制，请在打开的 GitHub 页面粘贴并确认提交。';};
 window.controls.onState(render);window.controls.state().then(render).catch(e=>$('message').textContent=e.message);
+$('closeWindow').onclick=()=>window.close();
+for(const id of ['privacyEnabled','autoPrivacyCheck'])$(id).onchange=async()=>{const result=await action(()=>window.controls.privacy(id,$(id).checked));if(result)render(result);else if(current)render(current);};
+$('privacyCheck').onclick=async()=>{const result=await action(()=>window.controls.selfCheck());if(result)render(result);};

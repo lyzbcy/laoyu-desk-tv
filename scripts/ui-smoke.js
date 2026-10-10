@@ -32,7 +32,13 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
   for(let i=0;i<100&&!getState().player.localMuted;i++)await sleep(50);assert(getState().player.localMuted,'controls sound IPC must change main state');
   await panel.webContents.executeJavaScript('document.querySelector("#localSound").click();true');
   for(let i=0;i<100&&getState().player.localMuted;i++)await sleep(50);assert.equal(getState().player.localMuted,false);
+  assert.equal(getState().privacy.enabled,true);assert.equal(getState().privacy.autoCheck,true);
+  for(const id of ['privacyEnabled','autoPrivacyCheck']){await panel.webContents.executeJavaScript(`document.querySelector('#${id}').click();true`);for(let i=0;i<100;i++){if((id==='privacyEnabled'?getState().privacy.enabled:getState().privacy.autoCheck)===false)break;await sleep(50);}assert.equal(id==='privacyEnabled'?getState().privacy.enabled:getState().privacy.autoCheck,false);}
+  assert.equal(mainWindow.isFocusable(),true);
+  for(const id of ['privacyEnabled','autoPrivacyCheck']){await panel.webContents.executeJavaScript(`document.querySelector('#${id}').click();true`);for(let i=0;i<100;i++){if((id==='privacyEnabled'?getState().privacy.enabled:getState().privacy.autoCheck)===true)break;await sleep(50);}assert.equal(id==='privacyEnabled'?getState().privacy.enabled:getState().privacy.autoCheck,true);}
+  assert.equal(mainWindow.isFocusable(),false);
   assert(await panel.webContents.executeJavaScript('document.querySelector("#includeLogs").checked && document.querySelector("#feedback").textContent.includes("GitHub")'));
+  panel.showInactive();await sleep(300);
   fs.writeFileSync(path.join(output,'controls.png'),(await panel.webContents.capturePage()).toPNG());panel.close();
   fs.writeFileSync(path.join(output,'player.png'),(await mainWindow.webContents.capturePage()).toPNG());
   const report={version:app.getVersion(),platform:process.platform,arch:process.arch,status:'passed',bounds:mainWindow.getBounds(),checks:['default mute','local toggle','boss forced mute and preference restore','real local BrowserView fixture','live sound toggle','hidden live mute','boss prevents live view resurfacing','feedback and diagnostic controls'],scope:'isolated userData; no global keys, user media, external web or outgoing feedback'};

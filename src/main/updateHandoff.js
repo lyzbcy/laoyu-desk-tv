@@ -1,8 +1,9 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),cp=require('node:child_process');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const {EXECUTABLE,NAME,LEGACY_EXECUTABLE,APP_ID}=require('../core/branding');
 const psQuote=value=>"'"+value.replaceAll("'","''")+"'";
 function appLocation(executable,platform=process.platform){
- if(platform==='win32'){if(path.basename(executable)!=='带薪看片.exe')throw Error('请安装正式版后再更新');const root=path.dirname(executable);if(root===path.parse(root).root)throw Error('无效安装目录');return {root,exe:executable};}
+ if(platform==='win32'){if(path.basename(executable)!==EXECUTABLE)throw Error('请安装正式版后再更新');const root=path.dirname(executable);if(root===path.parse(root).root)throw Error('无效安装目录');return {root,exe:executable};}
  if(platform==='darwin'){const match=/^(.*\.app)\/Contents\/MacOS\/[^/]+$/.exec(executable);if(!match)throw Error('请从应用程序包运行');return {root:match[1],exe:executable};}
  throw Error('此平台请手动更新');
 }
@@ -39,7 +40,11 @@ async function confirmRestart(app,logger){
  if(!/^[a-f0-9-]{36}$/.test(pointer.token||'')||pointer.version!==app.getVersion())return false;
  const directory=path.join(root,'install-'+pointer.token),file=path.join(directory,'result.json');
  let result,data;try{result=JSON.parse(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,''));data=JSON.parse(fs.readFileSync(path.join(directory,'payload.json'),'utf8'));}catch{return false;}
- if(result.status!=='installed'||result.token!==pointer.token||path.resolve(data.exe)!==path.resolve(process.execPath))return false;
+ const exactPath=path.resolve(data.exe)===path.resolve(process.execPath);
+ const legacyWindows=process.platform==='win32'&&path.basename(data.exe)===LEGACY_EXECUTABLE&&path.basename(process.execPath)===EXECUTABLE&&path.resolve(path.dirname(data.exe))===path.resolve(path.dirname(process.execPath))&&path.resolve(data.root)===path.resolve(path.dirname(process.execPath));
+ const oldMacRoot=process.platform==='darwin'?/^(.*\.app)\/Contents\/MacOS\/带薪看片$/.exec(data.exe)?.[1]:null;
+ const legacyMac=oldMacRoot&&path.basename(process.execPath)===NAME&&path.resolve(oldMacRoot)===path.resolve(appLocation(process.execPath,'darwin').root)&&path.resolve(data.root)===path.resolve(oldMacRoot);
+ if(result.status!=='installed'||result.token!==pointer.token||result.version!==pointer.version||data.token!==pointer.token||data.version!==pointer.version||data.appId!==APP_ID||(!exactPath&&!legacyWindows&&!legacyMac))return false;
  fs.writeFileSync(file,JSON.stringify({...result,status:'restarted',version:app.getVersion(),runningExe:process.execPath}));logger?.log('info','updater.restarted');return true;
 }
 module.exports={startHandoff,confirmRestart,appLocation};
