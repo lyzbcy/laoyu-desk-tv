@@ -72,12 +72,12 @@ ipcMain.handle('check-update',()=>updater.check(true));
 ipcMain.handle('install-update',()=>updater.install());
 ipcMain.handle('open-release',()=>shell.openExternal(RELEASE_PAGE));
 ipcMain.handle('export-logs',async()=>{
-  const result=await dialog.showSaveDialog({title:'导出技术日志',defaultPath:'捞鱼小窗-诊断.txt',filters:[{name:'文本',extensions:['txt']}]});
+  const result=await dialog.showSaveDialog({title:'导出技术日志',defaultPath:'捞鱼桌脚看电视-诊断.txt',filters:[{name:'文本',extensions:['txt']}]});
   if(result.canceled)return false;fs.writeFileSync(result.filePath,logger.summary(),'utf8');return true;
 });
 ipcMain.handle('feedback',async(_event,payload)=>{
   const note=String(payload?.note||'').slice(0,4000),category=String(payload?.category||'其他').slice(0,50);
-  const body=`软件：捞鱼小窗\n版本：${app.getVersion()}\n平台：${process.platform}/${process.arch}\n分类：${category}\n\n${note}\n`+(payload?.includeLogs?'\n技术日志（不含媒体路径、网址或登录信息）：\n'+logger.summary():'');
+  const body=`软件：捞鱼桌脚看电视\n版本：${app.getVersion()}\n平台：${process.platform}/${process.arch}\n分类：${category}\n\n${note}\n`+(payload?.includeLogs?'\n技术日志（不含媒体路径、网址或登录信息）：\n'+logger.summary():'');
   clipboard.writeText(body);await shell.openExternal('https://github.com/lyzbcy/paid-to-watch/issues/new');return true;
 });
 function goToUrl(value){
@@ -119,5 +119,5 @@ if(ownsInstance)app.whenReady().then(async()=>{
   await confirmRestart(app,logger).catch(()=>record('warn','updater.receipt-failed'));if(!smoke)updater.check(false).catch(()=>{});
   privacy.schedule();
   if(smoke)require('../../scripts/ui-smoke').run({app,mainWindow,liveView,callbacks,dispatch,getState:controlState}).catch(e=>{console.error(e.stack);app.exit(2);});
-}).catch(error=>{record('error','app.start-failed',{code:error.code||'Startup'});if(smoke){console.error(error);app.exit(2);}else dialog.showErrorBox('捞鱼小窗启动失败','请重新打开或到发布页下载完整软件包。');});
+}).catch(error=>{record('error','app.start-failed',{code:error.code||'Startup'});if(smoke){console.error(error);app.exit(2);}else dialog.showErrorBox('捞鱼桌脚看电视启动失败','请重新打开或到发布页下载完整软件包。');});
 app.on('window-all-closed',()=>app.quit());app.on('will-quit',()=>{privacy?.dispose();globalShortcut.unregisterAll();});

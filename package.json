@@ -20,7 +20,7 @@
   },
   "build": {
     "appId": "com.laoyu.paidtowatch",
-    "productName": "捞鱼小窗",
+    "productName": "捞鱼桌脚看电视",
     "files": [
       "LICENSE",
       "THIRD_PARTY_NOTICES.md",
@@ -48,7 +48,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "runAfterFinish": false,
-      "uninstallDisplayName": "捞鱼小窗"
+      "uninstallDisplayName": "捞鱼桌脚看电视"
     },
     "mac": {
       "target": [

@@ -9,7 +9,7 @@ $step='prepare'
 try{
  $root=[IO.Path]::GetFullPath($p.root)
  $exe=[IO.Path]::GetFullPath($p.exe)
- if([IO.Path]::GetDirectoryName($exe) -ne $root -or [IO.Path]::GetFileName($exe) -ne '捞鱼小窗.exe' -or $root.TrimEnd('\') -eq [IO.Path]::GetPathRoot($root).TrimEnd('\')){throw 'invalid target'}
+ if([IO.Path]::GetDirectoryName($exe) -ne $root -or [IO.Path]::GetFileName($exe) -ne '捞鱼桌脚看电视.exe' -or $root.TrimEnd('\') -eq [IO.Path]::GetPathRoot($root).TrimEnd('\')){throw 'invalid target'}
  if(-not(Test-Path -LiteralPath (Join-Path $root 'resources'))){throw 'not app directory'}
  if($p.token -notmatch '^[a-f0-9-]{36}$' -or $p.version -notmatch '^\d+\.\d+\.\d+$' -or (Sha256 $p.file) -ne $p.sha256){throw 'invalid package'}
  New-Item -ItemType Directory -Path $backup -Force|Out-Null

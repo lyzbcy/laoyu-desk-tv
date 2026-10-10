@@ -1,4 +1,4 @@
-# 捞鱼小窗（原带薪看片 / paid-to-watch）
+# 捞鱼桌脚看电视（原带薪看片 / paid-to-watch）
 
 本分支由[捞鱼工作室](https://github.com/lyzbcy)基于[a295371927-sys/paid-to-watch](https://github.com/a295371927-sys/paid-to-watch)继续开发，保留原作者代码与 MIT 许可。
 
@@ -12,7 +12,7 @@
 
 开发与验收入口见 [SKILL.md](SKILL.md) 和 [docs/agent.md](docs/agent.md)。Mac 云端构建与隔离 UI 验证覆盖启动、渲染和解码；真人听音、原生全局键与全屏空间、Mac更新回滚仍需真机验收。
 
-0.3.3将名称改为捞鱼小窗，图标来自精选的“偷看”表情并配播放符号。Windows主程序为「捞鱼小窗.exe」，旧「带薪看片.exe」仅是更新兼容入口。Mac首次安装优先DMG或laoyu-window开头的ZIP，里面是「捞鱼小窗.app」；paid-to-watch开头的Mac ZIP专供旧客户端兼容更新，旧安装目录名会保留。仓库、产品ID与设置目录保持paid-to-watch，已有配置继续使用。
+0.3.3将名称改为捞鱼桌脚看电视，图标来自精选的“偷看”表情并配播放符号。Windows主程序为「捞鱼桌脚看电视.exe」，旧「带薪看片.exe」仅是更新兼容入口。Mac首次安装优先DMG或laoyu-window开头的ZIP，里面是「捞鱼桌脚看电视.app」；paid-to-watch开头的Mac ZIP专供旧客户端兼容更新，旧安装目录名会保留。仓库、产品ID与设置目录保持paid-to-watch，已有配置继续使用。
 
 无感保护与自动自检默认开启，设置可分别关闭。自动检查窗口保护、不可激活和老板键，不弹窗、不闪校准图块。用户主动点“完整捕获自检”才临时显示小块校准色，验证外部GDI及真实播放器小区域，仅返回计数，不保存或上传桌面图像。Windows只证明当前支持的捕获路径，Mac ScreenCaptureKit可能绕过；会议/录屏前仍请预览确认。系统文件选择器与安装器不属于播放器窗口保护范围。
 

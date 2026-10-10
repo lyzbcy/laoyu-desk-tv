@@ -1,13 +1,13 @@
 ---
 name: paid-to-watch-dev
-description: 开发、修复、打包和维护捞鱼小窗（原带薪看片）的 Windows/macOS 版本，包括无感保护、自检、声音、老板键、日志、更新和软件中心适配。
+description: 开发、修复、打包和维护捞鱼桌脚看电视（原带薪看片）的 Windows/macOS 版本，包括无感保护、自检、声音、老板键、日志、更新和软件中心适配。
 ---
 
-# 捞鱼小窗开发入口
+# 捞鱼桌脚看电视开发入口
 
 ## 项目与技术
 
-伪装成广告小窗的本地视频/网页播放器。基于 a295371927-sys/paid-to-watch 二次开发，Electron 44.7、原生 JavaScript/CSS、Koffi、electron-builder 26、Vitest 5；Windows x64、macOS x64/arm64。0.3.3更名捞鱼小窗，技术产品ID和设置目录仍paid-to-watch。
+伪装成广告小窗的本地视频/网页播放器。基于 a295371927-sys/paid-to-watch 二次开发，Electron 44.7、原生 JavaScript/CSS、Koffi、electron-builder 26、Vitest 5；Windows x64、macOS x64/arm64。0.3.3更名捞鱼桌脚看电视，技术产品ID和设置目录仍paid-to-watch。
 
 ## 目录地图
 
