@@ -1,4 +1,20 @@
 import {it,expect} from 'vitest';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import crypto from 'node:crypto';import updater from '../src/main/updater.js';
+function fixture(version,bytes=Buffer.from('installer')){const name=`paid-to-watch-${version}-win-x64.exe`;return {tag_name:'v'+version,assets:[{name,digest:'sha256:'+crypto.createHash('sha256').update(bytes).digest('hex'),size:bytes.length,browser_download_url:`https://github.com/lyzbcy/paid-to-watch/releases/download/v${version}/${name}`}]};}
+it('concurrent checks and installations share work, and quit only after the helper commits',async()=>{
+ let config={},queries=0,downloads=0,handovers=0,quits=0;const bytes=Buffer.from('installer'),directory=fs.mkdtempSync(path.join(os.tmpdir(),'paid-concurrent-'));
+ const app={getVersion:()=> '0.3.0',getPath:()=>directory,isPackaged:true,quit:()=>quits++};
+ const u=updater.createUpdater({app,config:()=>config,save:c=>{config=c;return true;},fetcher:async url=>{await new Promise(r=>setTimeout(r,10));if(url.includes('api.github')){queries++;return Response.json(fixture('0.3.1',bytes));}downloads++;return new Response(bytes);},handoff:async()=>{expect(quits).toBe(0);handovers++;}});
+ await Promise.all([u.check(true),u.check(true)]);expect(queries).toBe(1);
+ await Promise.all([u.install(),u.install()]);expect(queries).toBe(2);expect(downloads).toBe(1);expect(handovers).toBe(1);expect(quits).toBe(1);
+});
+it('equal and older releases never download or hand off',async()=>{
+ for(const version of ['0.2.1','0.3.0']){let config={},handoffs=0;const u=updater.createUpdater({app:{getVersion:()=> '0.3.0',isPackaged:true},config:()=>config,save:c=>{config=c;return true;},fetcher:async()=>Response.json(fixture(version)),handoff:async()=>handoffs++});await u.check(true);expect(u.snapshot().available).toBe(false);await expect(u.install()).rejects.toThrow('没有可用更新');expect(handoffs).toBe(0);}
+});
+it('helper readiness failure preserves the running app',async()=>{
+ let config={},quits=0;const bytes=Buffer.from('installer'),directory=fs.mkdtempSync(path.join(os.tmpdir(),'paid-helper-'));
+ const u=updater.createUpdater({app:{getVersion:()=> '0.3.0',getPath:()=>directory,isPackaged:true,quit:()=>quits++},config:()=>config,save:c=>{config=c;return true;},fetcher:async url=>url.includes('api.github')?Response.json(fixture('0.3.1',bytes)):new Response(bytes),handoff:async()=>{throw Error('not ready');}});
+ await expect(u.install()).rejects.toThrow('旧版本保留');expect(quits).toBe(0);expect(u.snapshot().phase).toBe('error');
+});
 it('failed automatic check records attempt, not success; same-day opening does not retry but manual check does',async()=>{
  let config={},calls=0;const app={getVersion:()=> '0.3.0',getPath:()=>os.tmpdir(),isPackaged:true};
  const u=updater.createUpdater({app,config:()=>config,save:c=>{config=c;return true;},fetcher:async()=>{calls++;throw Error('offline');},now:()=>new Date('2026-10-10T08:00:00Z')});

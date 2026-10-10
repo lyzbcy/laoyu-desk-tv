@@ -1,6 +1,6 @@
 {
   "name": "paid-to-watch",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "伪装成右下角广告弹窗的本地视频摸鱼播放器",
   "main": "src/main/main.js",
   "license": "MIT",
@@ -20,12 +20,44 @@
   "build": {
     "appId": "com.laoyu.paidtowatch",
     "productName": "带薪看片",
-    "files": ["src/**/*", "assets/**/*", "scripts/ui-smoke.js", "tests/fixtures/silent.webm"],
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "scripts/ui-smoke.js",
+      "tests/fixtures/silent.webm"
+    ],
     "artifactName": "paid-to-watch-${version}-${os}-${arch}.${ext}",
     "icon": "assets/icon.png",
-    "win": { "target": ["nsis", "zip"], "signAndEditExecutable": true },
-    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": "always", "createStartMenuShortcut": true, "runAfterFinish": false },
-    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.entertainment", "extendInfo": { "LSUIElement": true } },
-    "publish": { "provider": "github", "owner": "lyzbcy", "repo": "paid-to-watch" }
-  }
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "runAfterFinish": false
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.entertainment",
+      "extendInfo": {
+        "LSUIElement": true
+      }
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "lyzbcy",
+      "repo": "paid-to-watch"
+    }
+  },
+  "author": "捞鱼工作室"
 }
