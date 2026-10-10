@@ -1,6 +1,13 @@
 ﻿param([string]$InstallerPath,[string]$InstallDir,[string]$Version,[switch]$Preview,[switch]$Acceptance,[string]$CapturePath,[string]$ReportPath)
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName PresentationFramework,PresentationCore,WindowsBase
+Add-Type @'
+using System;using System.Runtime.InteropServices;
+public static class LaoyuSetupWindow {
+ [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr window,int command);
+ [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
+}
+'@
 $script:busy=$false;$script:done=$false;$script:exitCode=0;$script:worker=$null;$script:timer=$null
 function Existing-Install {
  $record=Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue | Where-Object {$_.DisplayName -match '^(捞鱼桌脚看电视|捞鱼小窗|带薪看片)( \d+\.\d+\.\d+)?$'} | Select-Object -First 1
@@ -36,6 +43,13 @@ $xaml=@'
 </Window>
 '@
 $window=[Windows.Markup.XamlReader]::Parse($xaml);$c=@{}
+$window.Add_SourceInitialized({
+ if(-not $Preview){
+  $script:showTimer=[Windows.Threading.DispatcherTimer]::new();$script:showTimer.Interval=[TimeSpan]::FromMilliseconds(200)
+  $script:showTimer.Add_Tick({param($s,$e)$handle=[Windows.Interop.WindowInteropHelper]::new($window).Handle;[void][LaoyuSetupWindow]::ShowWindow($handle,5);if([LaoyuSetupWindow]::IsWindowVisible($handle)){$s.Stop();[void]$window.Activate();if($ReportPath -and -not $Acceptance){@{status='visible';title=$window.Title;handle=$handle.ToInt64();version=$Version;path=$c.Path.Text;nativeVisible=$true}|ConvertTo-Json|Set-Content -LiteralPath $ReportPath -Encoding UTF8}}})
+  $script:showTimer.Start()
+ }
+})
 foreach($name in 'VersionLabel','Drag','Close','Setup','Drives','Path','Hint','Desktop','Error','Progress','Stage','Track','Fill','Percent','Finish','Launch','Primary'){$c[$name]=$window.FindName($name)}
 $icon=Join-Path $PSScriptRoot 'icon.png';if(-not [IO.File]::Exists($icon)){$icon=Join-Path $PSScriptRoot '../../assets/icon.png'};if([IO.File]::Exists($icon)){$window.FindName('ProductIcon').Source=[Windows.Media.Imaging.BitmapImage]::new([Uri]::new([IO.Path]::GetFullPath($icon)))}
 $c.VersionLabel.Text="v$Version  ·  Windows 10 / 11";$c.Path.Text=$InstallDir;$c.Hint.Text=$reason
@@ -68,6 +82,10 @@ function Install {
  }catch{$c.Error.Text=$_.Exception.Message;if($Acceptance){$script:exitCode=1;@{status='failed';message=$_.Exception.Message}|ConvertTo-Json|Set-Content -LiteralPath $ReportPath -Encoding UTF8;$window.Close()}}
 }
 $c.Primary.Add_Click({if($Preview){return};if($script:done){if($c.Launch.IsChecked){Start-Process -FilePath $script:exe -WorkingDirectory $script:target -WindowStyle Normal|Out-Null};$window.Close()}else{Install}})
-$window.Add_ContentRendered({if($Acceptance){Install};if($Preview){$timer=[Windows.Threading.DispatcherTimer]::new();$timer.Interval=[TimeSpan]::FromMilliseconds(350);$timer.Add_Tick({param($s,$e)$s.Stop();Capture;$window.Close()});$timer.Start()}})
+$window.Add_ContentRendered({
+ # PowerShell's hidden startup flag must hide its console, not the WPF installer.
+ if(-not $Preview){$handle=[Windows.Interop.WindowInteropHelper]::new($window).Handle;[void][LaoyuSetupWindow]::ShowWindow($handle,5);[void]$window.Activate()}
+ if($Acceptance){Install};if($Preview){$timer=[Windows.Threading.DispatcherTimer]::new();$timer.Interval=[TimeSpan]::FromMilliseconds(350);$timer.Add_Tick({param($s,$e)$s.Stop();Capture;$window.Close()});$timer.Start()}
+})
 try{[void]$window.ShowDialog()}finally{if($script:timer){$script:timer.Stop()};if($script:worker){$script:worker.Dispose()}}
 exit $script:exitCode

@@ -9,7 +9,10 @@
   SetOutPath "$0"
   File /oname=installer-ui.ps1 "${PROJECT_DIR}\src\helpers\setup.ps1"
   File /oname=icon.png "${PROJECT_DIR}\assets\icon.png"
-  Exec '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -STA -ExecutionPolicy Bypass -WindowStyle Hidden -File "$0\installer-ui.ps1" -InstallerPath "$EXEPATH" -InstallDir "$INSTDIR" -Version "${VERSION}"'
+  ; INSTDIR is not initialized at this early hook. Passing an empty quoted
+  ; argument through Windows PowerShell can shift -Version into InstallDir.
+  ; The WPF frontend resolves the existing install or recommends a disk itself.
+  Exec '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -STA -ExecutionPolicy Bypass -WindowStyle Hidden -File "$0\installer-ui.ps1" -InstallerPath "$EXEPATH" -Version "${VERSION}"'
   Quit
   paid_backend_ready:
 !macroend

@@ -6,4 +6,4 @@
 
 用户设置在系统userData/paid-to-watch；声音、目录、快捷键沿用原配置。配置原子保存。日志只含有限技术事件。网络、反馈分享及更新包验证都由主进程完成。
 
-发布源固定为lyzbcy/paid-to-watch，软件主程序名保持带薪看片.exe、带薪看片.app；启动器ID paid-to-watch。跨平台构建与平台验收独立，不能用Windows样本证明Mac正常。
+发布源固定为lyzbcy/laoyu-desk-tv，主程序为捞鱼桌脚看电视.exe、捞鱼桌脚看电视.app；启动器ID paid-to-watch。跨平台构建与平台验收独立，不能用Windows样本证明Mac正常。

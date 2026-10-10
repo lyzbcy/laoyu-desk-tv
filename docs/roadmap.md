@@ -1,21 +1,18 @@
 # 开发进度
 
-现状：0.3.2已公开发行；负责人：捞鱼；最后更新：2026-10-10。
+现状：Laoyu Desk TV 0.3.3发布验收；负责人：捞鱼；最后更新：2026-10-10。
 
-用户授权：基于上游继续开发，遵守软件开发规范；Mac版、声音体验和软件中心接入全部实施。上游0.2.1基线22项测试通过。新开发仓库lyzbcy/paid-to-watch，保留上游历史。
+中文名「捞鱼桌脚看电视」，英文名「Laoyu Desk TV」。主仓库lyzbcy/laoyu-desk-tv；旧lyzbcy/paid-to-watch只保留0.3.2固化更新器的兼容发行通道。上游出处a295371927-sys/paid-to-watch及MIT许可保留。
 
-| 工作 | 状态/验收 |
-|---|---|
-| 项目Skill及渐进式文档 | 已建立，quick_validate通过 |
-| 声音开关、老板键一致性 | 已实现主进程统一状态，Windows/Mac真实Electron隔离回归通过 |
-| Mac窗口/Command键/两种架构包 | Intel/Apple Silicon的DMG/ZIP均已发布；arm64实际打包应用的隔离启动、UI状态、声音IPC和解码通过 |
-| 日志/用户反馈 | 有限技术日志、导出与用户确认GitHub反馈，不包含群机器人密钥，未外发测试消息 |
-| 自身更新 | Windows安装版0.3.1候选→0.3.2真实UI更新/校验/退出/重启通过，目录、Shift+Z及声音设置保留 |
-| 软件中心接入 | 0.8.4已登记，严格自查全通过；下载打开验收另见软件中心docs/paid-to-watch-adapter.md |
-| 原有Windows便携版 | 已迁移到安装版；D:/Downloads/-0.2.1-win原目录保留 |
+- 声音：主进程统一状态、本地/网页独立开关、默认静音；老板键同时遮挡和静音，恢复用户偏好。隔离媒体回归通过。
+- 平台：Windows x64、Mac Intel/Apple Silicon DMG/ZIP；Command键、工作区与多屏定位。Mac原生arm64打包应用的启动、解码和声音IPC通过。
+- 无感：保护和自动自检默认开启，可分别关闭并保存。Windows原生保护/不可激活/工具窗回读，以及独立GDI正基线、保护探针和实际宿主小区域验证通过。自动检查不弹窗，不显示校准图块；完整捕获检查由用户触发。
+- 更新：真实已安装0.3.2→最终0.3.3的校验、退出、安装、可见重启及旧名兼容入口通过，Shift+Z、媒体目录和声音偏好保留。报告verification/english-brand-installed-update.json。最终版以后读取新品牌仓库。
+- 安装：Windows无边框WPF主题、盘符/路径与快捷方式选项；保留已有位置，首次优先非系统盘。源码前端原生可见性与真实后台安装版本登记通过。
+- 软件中心：0.8.5新名称/Logo、新仓库、主程序识别与ZIP准备；真实下载、重启关联和打开以软件中心的最终验收报告为准。
+- 日志反馈：有限技术日志，不记录媒体路径、网页内容或登录态。用户自行确认提交GitHub反馈；没有外发测试消息。
 
-验证：44项单元测试；CI https://github.com/lyzbcy/paid-to-watch/actions/runs/38030804459 Windows/Mac通过。独立Kimi报告verification/ui-observer/regression-report.md；Windows原生与打包报告ui-final-windows/ui-final-packaged-windows，升级installed-update-windows.json；Mac证据ci-mac-final-ui-strict。浏览器fixture只证明DOM/视觉交互，silent.webm只证明解码和状态，不证明音频听感。Mac隐藏offscreen截图有合成缓存，DOM状态与声音IPC已通过强制断言，截图不作为动态数值证据。
+48项单测通过。品牌版Windows/Mac CI：https://github.com/lyzbcy/laoyu-desk-tv/actions/runs/38038840901；证据verification/ci-english-brand。独立Kimi观察报告verification/ui-observer/regression-0.3.3.md只证明模拟宿主DOM/视觉。真实捕获证据verification/privacy-windows.json，原生接口成功不能证明所有会议软件不可见。
 
-Windows经验：进程级ExecutionPolicy Bypass运行随包助手；版本资源兼容第四段.0；主进程等待存在竞态须允许进程已退出，安装前还需等待Chromium子进程。ready/commit/abort握手通过才退出；失败保留备份。0.3.0/0.3.1为内部候选，未正式发行。
+Mac真人听音、原生全屏/全局键、更新安装及回滚仍需真机验证；静音WebM只证明解码和播放状态。Windows未签名，Mac未签名公证。系统文件选择器和安装器不在播放器保护范围。会议/录屏前须在目标软件预览，Mac ScreenCaptureKit可能绕过保护。开发目录保留E:/共享/创业/带薪看片，稳定AppID、userData和软件中心产品ID不变。
 
-Mac真人听音、原生全局快捷键/全屏空间、更新安装及回滚尚未真机验收。Windows未签名；Mac未签名公证。设置备份verification/config-before-migration.json只留本地，不上传。

@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
   "id": "paid-to-watch",
-  "name": "带薪看片",
-  "version": "0.3.2",
+  "name": "捞鱼桌脚看电视",
+  "version": "0.3.3",
   "platform": "win32",
   "architecture": "x64",
-  "executable": "带薪看片.exe",
+  "executable": "捞鱼桌脚看电视.exe",
   "category": "桌面效率",
   "summary": "在假广告窗口播放本地视频或网页，老板键遮挡并静音。",
-  "siteUrl": "https://github.com/lyzbcy/paid-to-watch",
+  "siteUrl": "https://github.com/lyzbcy/laoyu-desk-tv",
   "iconPath": "assets/icon.png",
   "videoIds": [],
   "package": {
     "type": "portable-zip",
-    "path": "dist/paid-to-watch-0.3.2-win-x64.zip",
-    "url": "https://github.com/lyzbcy/paid-to-watch/releases/download/v0.3.2/paid-to-watch-0.3.2-win-x64.zip",
-    "sha256": "7086ba217266783ceb026d0982aca4e68b6197de13dc68e3702250cc129f6ece"
+    "path": "dist/laoyu-desk-tv-0.3.3-win-x64.zip",
+    "url": "https://github.com/lyzbcy/laoyu-desk-tv/releases/download/v0.3.3/laoyu-desk-tv-0.3.3-win-x64.zip",
+    "sha256": "58b92feeff506d9eb16f757d7d229b1fe772bef14c2d7d7703531f16528cd0d8"
   },
   "installation": {
-    "displayName": "带薪看片"
+    "displayName": "捞鱼桌脚看电视"
   }
 }
