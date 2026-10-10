@@ -4,6 +4,7 @@ const root=path.resolve(__dirname,'..'),{initialState,transition,viewState}=requ
 let player=initialState({}),phase='idle',message='默认静音，可点击声音开关开启';
 const snapshot=()=>({version:require('../package.json').version,platform:'win32',architecture:'x64',player:viewState(player),phase,message,hotkey:'Ctrl+Alt+Q',updater:{phase:'idle',available:false}});
 const bridge=`
+(() => {
 const callbacks=[];const emit=s=>callbacks.forEach(f=>f(s));
 async function state(){return (await fetch('/state.json')).json();}
 async function action(type,data={}){const s=await(await fetch('/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,...data})})).json();emit(s);return s;}
@@ -12,6 +13,8 @@ window.controls={state,sound:(source,on)=>action('sound',{source,on}),check:()=>
 setInterval(()=>state().then(emit),300);
 document.addEventListener('DOMContentLoaded',()=>{const v=document.querySelector('video');if(v)v.loop=true;});
 document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.altKey&&e.key.toLowerCase()==='q'){e.preventDefault();action('boss');}});
+window.refreshPreviewState=()=>state().then(emit);
+})();
 `;
 const server=http.createServer((req,res)=>{
  if(req.url==='/preview.css'){res.setHeader('Content-Type','text/css');res.end('html,body{margin:0;padding:0;background:#ececec}body:has(#app){padding:32px 16px}#app{width:360px;height:640px}body:not(:has(#app)){max-width:570px;margin:32px auto}');return;}

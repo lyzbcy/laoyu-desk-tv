@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import crypto from 'node:crypto';import updater from '../src/main/updater.js';
-function fixture(version,bytes=Buffer.from('installer')){const name=`paid-to-watch-${version}-win-x64.exe`;return {tag_name:'v'+version,assets:[{name,digest:'sha256:'+crypto.createHash('sha256').update(bytes).digest('hex'),size:bytes.length,browser_download_url:`https://github.com/lyzbcy/paid-to-watch/releases/download/v${version}/${name}`}]};}
+function fixture(version,bytes=Buffer.from('installer')){const name=`paid-to-watch-${version}-${process.platform==='darwin'?'mac':'win'}-${process.arch}.${process.platform==='darwin'?'zip':'exe'}`;return {tag_name:'v'+version,assets:[{name,digest:'sha256:'+crypto.createHash('sha256').update(bytes).digest('hex'),size:bytes.length,browser_download_url:`https://github.com/lyzbcy/paid-to-watch/releases/download/v${version}/${name}`}]};}
 it('concurrent checks and installations share work, and quit only after the helper commits',async()=>{
  let config={},queries=0,downloads=0,handovers=0,quits=0;const bytes=Buffer.from('installer'),directory=fs.mkdtempSync(path.join(os.tmpdir(),'paid-concurrent-'));
  const app={getVersion:()=> '0.3.0',getPath:()=>directory,isPackaged:true,quit:()=>quits++};
