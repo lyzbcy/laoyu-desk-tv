@@ -1,4 +1,4 @@
-# 带薪看片开发入口
+# 捞鱼桌脚看电视 · Laoyu Desk TV开发入口
 
 先读根 SKILL.md，再读 docs/agent.md 和对应模块。开发规范来自 E:/共享/tools/软件开发。
 

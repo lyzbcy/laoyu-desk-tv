@@ -1,6 +1,6 @@
 # 开发进度
 
-现状：Laoyu Desk TV 0.3.3发布验收；负责人：捞鱼；最后更新：2026-10-10。
+现状：Laoyu Desk TV 0.3.3已公开发行；负责人：捞鱼；最后更新：2026-10-10。
 
 中文名「捞鱼桌脚看电视」，英文名「Laoyu Desk TV」。主仓库lyzbcy/laoyu-desk-tv；旧lyzbcy/paid-to-watch只保留0.3.2固化更新器的兼容发行通道。上游出处a295371927-sys/paid-to-watch及MIT许可保留。
 
@@ -16,3 +16,5 @@
 
 Mac真人听音、原生全屏/全局键、更新安装及回滚仍需真机验证；静音WebM只证明解码和播放状态。Windows未签名，Mac未签名公证。系统文件选择器和安装器不在播放器保护范围。会议/录屏前须在目标软件预览，Mac ScreenCaptureKit可能绕过保护。开发目录保留E:/共享/创业/带薪看片，稳定AppID、userData和软件中心产品ID不变。
 
+
+最终Windows设置验收：关闭无感保护与自动自检后冷启动仍关闭，原生标志关闭/恢复成功，最终两项恢复开启；媒体、老板键和声音偏好保留。见verification/privacy-installed-restart.json。网页介绍页已同步v1.20.0，私有备份提交15dce0e5b8e8ba835972696b26269339ef885b9e。
