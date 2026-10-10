@@ -78,7 +78,7 @@ ipcMain.handle('export-logs',async()=>{
 ipcMain.handle('feedback',async(_event,payload)=>{
   const note=String(payload?.note||'').slice(0,4000),category=String(payload?.category||'其他').slice(0,50);
   const body=`软件：捞鱼桌脚看电视\n版本：${app.getVersion()}\n平台：${process.platform}/${process.arch}\n分类：${category}\n\n${note}\n`+(payload?.includeLogs?'\n技术日志（不含媒体路径、网址或登录信息）：\n'+logger.summary():'');
-  clipboard.writeText(body);await shell.openExternal('https://github.com/lyzbcy/paid-to-watch/issues/new');return true;
+  clipboard.writeText(body);await shell.openExternal('https://github.com/lyzbcy/laoyu-desk-tv/issues/new');return true;
 });
 function goToUrl(value){
   if(typeof value!=='string'||value.length>4096)return;

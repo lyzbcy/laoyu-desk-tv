@@ -1,10 +1,10 @@
-# 捞鱼桌脚看电视（原带薪看片 / paid-to-watch）
+# 捞鱼桌脚看电视 · Laoyu Desk TV
 
 本分支由[捞鱼工作室](https://github.com/lyzbcy)基于[a295371927-sys/paid-to-watch](https://github.com/a295371927-sys/paid-to-watch)继续开发，保留原作者代码与 MIT 许可。
 
 ## 下载与声音
 
-[发行页](https://github.com/lyzbcy/paid-to-watch/releases/latest)提供 Windows x64 安装器/便携 ZIP、macOS Intel/Apple Silicon 的 DMG/ZIP。Mac 按芯片选择 x64 或 arm64，将「带薪看片.app」拖入应用程序；当前没有 Apple 签名和公证，系统可能需要在隐私与安全性设置中允许打开。不要在只读 DMG 内直接运行来尝试更新。
+[发行页](https://github.com/lyzbcy/laoyu-desk-tv/releases/latest)提供 Windows x64 安装器/便携 ZIP、macOS Intel/Apple Silicon 的 DMG/ZIP。Mac 按芯片选择 x64 或 arm64，将「捞鱼桌脚看电视.app」拖入应用程序；当前没有 Apple 签名和公证，系统可能需要在隐私与安全性设置中允许打开。不要在只读 DMG 内直接运行来尝试更新。
 
 首次使用默认静音，窗口底部点击「本地：静音」或「直播：静音」开启声音；托盘和「设置」也能分别调节两个来源。老板键遮挡时两个来源均强制静音，切回恢复偏好。Mac 可设置 Command 组合键，窗口定位支持菜单栏与多屏。
 
@@ -12,7 +12,7 @@
 
 开发与验收入口见 [SKILL.md](SKILL.md) 和 [docs/agent.md](docs/agent.md)。Mac 云端构建与隔离 UI 验证覆盖启动、渲染和解码；真人听音、原生全局键与全屏空间、Mac更新回滚仍需真机验收。
 
-0.3.3将名称改为捞鱼桌脚看电视，图标来自精选的“偷看”表情并配播放符号。Windows主程序为「捞鱼桌脚看电视.exe」，旧「带薪看片.exe」仅是更新兼容入口。Mac首次安装优先DMG或laoyu-window开头的ZIP，里面是「捞鱼桌脚看电视.app」；paid-to-watch开头的Mac ZIP专供旧客户端兼容更新，旧安装目录名会保留。仓库、产品ID与设置目录保持paid-to-watch，已有配置继续使用。
+0.3.3更名为「捞鱼桌脚看电视 / Laoyu Desk TV」，仓库和下载包统一使用laoyu-desk-tv，图标为“偷看”表情配播放符号。Windows主程序是「捞鱼桌脚看电视.exe」；Mac首次安装使用DMG或普通ZIP，带-update的ZIP仅供应用内更新。旧带薪看片.exe和旧名Mac包根目录用于升级兼容。旧发行仓库仅保留旧客户端更新通道，稳定AppID、软件中心产品ID和设置目录不改，已有配置继续使用。
 
 无感保护与自动自检默认开启，设置可分别关闭。自动检查窗口保护、不可激活和老板键，不弹窗、不闪校准图块。用户主动点“完整捕获自检”才临时显示小块校准色，验证外部GDI及真实播放器小区域，仅返回计数，不保存或上传桌面图像。Windows只证明当前支持的捕获路径，Mac ScreenCaptureKit可能绕过；会议/录屏前仍请预览确认。系统文件选择器与安装器不属于播放器窗口保护范围。
 

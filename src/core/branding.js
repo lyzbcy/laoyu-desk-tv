@@ -1,3 +1,3 @@
 const NAME='捞鱼桌脚看电视',EXECUTABLE=NAME+'.exe',BUNDLE=NAME+'.app';
 const LEGACY_NAME='带薪看片',LEGACY_EXECUTABLE=LEGACY_NAME+'.exe',LEGACY_BUNDLE=LEGACY_NAME+'.app';
-module.exports={NAME,EXECUTABLE,BUNDLE,LEGACY_NAME,LEGACY_EXECUTABLE,LEGACY_BUNDLE,APP_ID:'com.laoyu.paidtowatch'};
+module.exports={NAME,ENGLISH_NAME:'Laoyu Desk TV',SLUG:'laoyu-desk-tv',REPO:'lyzbcy/laoyu-desk-tv',EXECUTABLE,BUNDLE,LEGACY_NAME,LEGACY_EXECUTABLE,LEGACY_BUNDLE,APP_ID:'com.laoyu.paidtowatch'};

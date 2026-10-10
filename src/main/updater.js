@@ -4,7 +4,7 @@ const {startHandoff,confirmRestart}=require('./updateHandoff');
 async function hashFile(file){const hash=crypto.createHash('sha256');for await(const bytes of fs.createReadStream(file))hash.update(bytes);return hash.digest('hex');}
 async function fetchRelease(fetcher,platform,arch){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
- try{const response=await fetcher(`https://api.github.com/repos/${REPO}/releases/latest`,{signal:controller.signal,redirect:'error',cache:'no-store',headers:{'User-Agent':'paid-to-watch'}});if(!response.ok)throw Error('发布信息暂不可用');const text=await response.text();if(text.length>1024*1024)throw Error('发布信息异常');return selectRelease(JSON.parse(text),platform,arch);}finally{clearTimeout(timer);}
+ try{const response=await fetcher(`https://api.github.com/repos/${REPO}/releases/latest`,{signal:controller.signal,redirect:'error',cache:'no-store',headers:{'User-Agent':'laoyu-desk-tv'}});if(!response.ok)throw Error('发布信息暂不可用');const text=await response.text();if(text.length>1024*1024)throw Error('发布信息异常');return selectRelease(JSON.parse(text),platform,arch);}finally{clearTimeout(timer);}
 }
 async function download(release,directory,fetcher,progress){
  fs.mkdirSync(directory,{recursive:true});const target=path.join(directory,release.name);

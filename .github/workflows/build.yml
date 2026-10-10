@@ -59,7 +59,7 @@ jobs:
           gh release upload "v$version" dist/*.dmg dist/*mac*.zip --clobber
       - uses: actions/upload-artifact@v4
         with:
-          name: paid-to-watch-${{ runner.os }}
+          name: laoyu-desk-tv-${{ runner.os }}
           path: |
             dist/*.exe
             dist/*.zip

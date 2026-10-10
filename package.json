@@ -1,7 +1,7 @@
 {
-  "name": "paid-to-watch",
+  "name": "laoyu-desk-tv",
   "version": "0.3.3",
-  "description": "伪装成右下角广告弹窗的本地视频摸鱼播放器",
+  "description": "Laoyu Desk TV · 捞鱼桌脚看电视，桌面小窗视频播放器",
   "main": "src/main/main.js",
   "license": "MIT",
   "scripts": {
@@ -30,7 +30,7 @@
       "scripts/ui-smoke.js",
       "tests/fixtures/silent.webm"
     ],
-    "artifactName": "paid-to-watch-${version}-${os}-${arch}.${ext}",
+    "artifactName": "laoyu-desk-tv-${version}-${os}-${arch}.${ext}",
     "icon": "assets/icon.png",
     "afterPack": "scripts/after-pack.cjs",
     "win": {
@@ -63,7 +63,7 @@
     "publish": {
       "provider": "github",
       "owner": "lyzbcy",
-      "repo": "paid-to-watch"
+      "repo": "laoyu-desk-tv"
     }
   },
   "author": "捞鱼工作室",
