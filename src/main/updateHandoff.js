@@ -18,7 +18,7 @@ async function startHandoff({app,file,release}){
  try{
   if(process.platform==='win32'){
    const command=`& ${psQuote(helper)}`;
-   const bootstrap=`Start-Process -FilePath powershell.exe -WindowStyle Hidden -ArgumentList @('-NoProfile','-NonInteractive','-EncodedCommand','${Buffer.from(command,'utf16le').toString('base64')}')`;
+   const bootstrap=`Start-Process -FilePath powershell.exe -WindowStyle Hidden -ArgumentList @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-EncodedCommand','${Buffer.from(command,'utf16le').toString('base64')}')`;
    await new Promise((resolve,reject)=>cp.execFile('powershell.exe',['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(bootstrap,'utf16le').toString('base64')],{windowsHide:true,timeout:20000},e=>e?reject(e):resolve()));
   }else{
    fs.accessSync(path.dirname(location.root),fs.constants.W_OK);

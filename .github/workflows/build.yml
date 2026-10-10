@@ -4,8 +4,13 @@ on:
     branches: ['master', 'codex/**']
   pull_request:
   workflow_dispatch:
+    inputs:
+      upload_mac_draft:
+        description: Upload verified Mac packages to an existing draft release
+        type: boolean
+        default: false
 permissions:
-  contents: read
+  contents: write
 jobs:
   desktop:
     strategy:
@@ -35,6 +40,22 @@ jobs:
       - name: Mac Intel and Apple Silicon packages
         if: runner.os == 'macOS'
         run: npm run dist:mac
+      - name: Packaged native Mac UI regression
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          PAID_SMOKE_OUTPUT: verification/ui-packaged
+        run: |
+          binary=$(find dist/mac-arm64 -path '*/Contents/MacOS/*' -type f -maxdepth 4 | head -n 1)
+          "$binary" --paid-to-watch-smoke --disable-gpu --no-sandbox
+      - name: Upload Mac packages to prepared draft
+        if: runner.os == 'macOS' && inputs.upload_mac_draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          gh release upload "v$version" dist/*.dmg dist/*mac*.zip
       - uses: actions/upload-artifact@v4
         with:
           name: paid-to-watch-${{ runner.os }}
@@ -44,4 +65,9 @@ jobs:
             dist/*.dmg
             dist/*.yml
             verification/ui/*
+            verification/ui-packaged/*
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ui-evidence-${{ runner.os }}
+          path: verification/ui*/*

@@ -25,7 +25,7 @@ try{
  $installer=Start-Process -FilePath $p.file -ArgumentList @('/S',('/D='+$root)) -WindowStyle Hidden -Wait -PassThru
  if($installer.ExitCode -ne 0){throw 'installer failed'}
  $version=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion
- if($version -ne $p.version){throw 'version mismatch'}
+ if($version -ne $p.version -and $version -ne ($p.version+'.0')){throw 'version mismatch'}
  JsonFile 'result.json' @{token=$p.token;status='installed';version=$p.version;backup=$backup}
  Start-Process -FilePath $exe -WorkingDirectory $root -WindowStyle Normal|Out-Null
  $limit=(Get-Date).AddSeconds(90)
