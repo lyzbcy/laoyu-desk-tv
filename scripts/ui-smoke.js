@@ -25,7 +25,13 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
   dispatch({type:'toggle-boss'});assert.equal(liveView.webContents.isAudioMuted(),false);assert(liveView.getBounds().height>0);
   callbacks.onToggleLive();assert.equal(liveView.webContents.isAudioMuted(),true);
   const panel=callbacks.onOpenControls();
-  for(let i=0;i<100;i++){try{if(await panel.webContents.executeJavaScript('typeof window.controls!=="undefined" && document.querySelector("#localSound").checked'))break;}catch{}await sleep(50);}
+  let panelReady=false;
+  for(let i=0;i<200;i++){try{panelReady=await panel.webContents.executeJavaScript('typeof window.controls!=="undefined" && document.querySelector("#localSound").checked && !!document.querySelector("#version").textContent');if(panelReady)break;}catch{}await sleep(50);}
+  assert(panelReady,'controls did not initialize: '+await panel.webContents.executeJavaScript('document.querySelector("#message").textContent'));
+  await panel.webContents.executeJavaScript('document.querySelector("#localSound").click();true');
+  for(let i=0;i<100&&!getState().player.localMuted;i++)await sleep(50);assert(getState().player.localMuted,'controls sound IPC must change main state');
+  await panel.webContents.executeJavaScript('document.querySelector("#localSound").click();true');
+  for(let i=0;i<100&&getState().player.localMuted;i++)await sleep(50);assert.equal(getState().player.localMuted,false);
   assert(await panel.webContents.executeJavaScript('document.querySelector("#includeLogs").checked && document.querySelector("#feedback").textContent.includes("GitHub")'));
   fs.writeFileSync(path.join(output,'controls.png'),(await panel.webContents.capturePage()).toPNG());panel.close();
   fs.writeFileSync(path.join(output,'player.png'),(await mainWindow.webContents.capturePage()).toPNG());

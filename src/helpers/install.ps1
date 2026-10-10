@@ -5,6 +5,7 @@ function JsonFile($name,$data){$data|ConvertTo-Json -Compress|Set-Content -Liter
 function Sha256($file){$stream=[IO.File]::OpenRead($file);try{$hash=[Security.Cryptography.SHA256]::Create();try{return ([BitConverter]::ToString($hash.ComputeHash($stream))).Replace('-','').ToLowerInvariant()}finally{$hash.Dispose()}}finally{$stream.Dispose()}}
 $backup=Join-Path $job 'backup'
 $installStarted=$false
+$step='prepare'
 try{
  $root=[IO.Path]::GetFullPath($p.root)
  $exe=[IO.Path]::GetFullPath($p.exe)
@@ -19,14 +20,21 @@ try{
  while(-not(Test-Path -LiteralPath (Join-Path $job 'commit.json'))){if((Test-Path -LiteralPath (Join-Path $job 'abort.json')) -or (Get-Date) -gt $limit){throw 'not committed'};Start-Sleep -Milliseconds 100}
  $commit=Get-Content -LiteralPath (Join-Path $job 'commit.json') -Raw|ConvertFrom-Json
  if($commit.token -ne $p.token){throw 'wrong commit'}
- if(Get-Process -Id $p.pid -ErrorAction SilentlyContinue){Wait-Process -Id $p.pid -Timeout 120 -ErrorAction Stop}
+ $step='wait-parent'
+ if(Get-Process -Id $p.pid -ErrorAction SilentlyContinue){try{Wait-Process -Id $p.pid -Timeout 120 -ErrorAction Stop}catch{if(Get-Process -Id $p.pid -ErrorAction SilentlyContinue){throw}}}
+ # Chromium children may remain briefly after the main process exits.
+ $limit=(Get-Date).AddSeconds(120)
+ while(Get-Process | Where-Object { try { $_.Path -eq $exe } catch { $false } }){if((Get-Date) -gt $limit){throw 'runtime still active'};Start-Sleep -Milliseconds 200}
+ $step='install'
  if((Sha256 $p.file) -ne $p.sha256){throw 'package changed'}
  $installStarted=$true
  $installer=Start-Process -FilePath $p.file -ArgumentList @('/S',('/D='+$root)) -WindowStyle Hidden -Wait -PassThru
  if($installer.ExitCode -ne 0){throw 'installer failed'}
+ $step='verify-version'
  $version=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion
  if($version -ne $p.version -and $version -ne ($p.version+'.0')){throw 'version mismatch'}
  JsonFile 'result.json' @{token=$p.token;status='installed';version=$p.version;backup=$backup}
+ $step='restart'
  Start-Process -FilePath $exe -WorkingDirectory $root -WindowStyle Normal|Out-Null
  $limit=(Get-Date).AddSeconds(90)
  while((Get-Date) -lt $limit){Start-Sleep -Milliseconds 200;try{$result=Get-Content -LiteralPath (Join-Path $job 'result.json') -Raw|ConvertFrom-Json;if($result.status -eq 'restarted' -and $result.token -eq $p.token){exit 0}}catch{}}
@@ -38,6 +46,6 @@ try{
   foreach($entry in Get-ChildItem -LiteralPath $backup){Copy-Item -LiteralPath $entry.FullName -Destination (Join-Path $root $entry.Name) -Recurse -Force}
   Start-Process -FilePath $exe -WorkingDirectory $root -WindowStyle Normal|Out-Null
  }catch{}}
- JsonFile 'result.json' @{token=$p.token;status='failed';version=$p.version;backup=$backup;message='更新未完成，保留程序备份和用户设置'}
+ JsonFile 'result.json' @{token=$p.token;status='failed';version=$p.version;backup=$backup;step=$step;message='更新未完成，保留程序备份和用户设置'}
  exit 1
 }
