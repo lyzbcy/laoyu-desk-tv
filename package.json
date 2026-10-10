@@ -1,6 +1,6 @@
 {
   "name": "paid-to-watch",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "伪装成右下角广告弹窗的本地视频摸鱼播放器",
   "main": "src/main/main.js",
   "license": "MIT",
@@ -8,7 +8,9 @@
     "start": "electron .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dist": "electron-builder"
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win nsis zip --x64 --publish never",
+    "dist:mac": "electron-builder --mac dmg zip --x64 --arm64 --publish never"
   },
   "devDependencies": {
     "electron": "^31.0.0",
@@ -16,9 +18,14 @@
     "vitest": "^2.0.0"
   },
   "build": {
-    "appId": "com.stevenliang.paidtowatch",
+    "appId": "com.laoyu.paidtowatch",
     "productName": "带薪看片",
-    "files": ["src/**/*", "assets/**/*"],
-    "win": { "target": "portable", "signAndEditExecutable": false }
+    "files": ["src/**/*", "assets/**/*", "scripts/ui-smoke.js", "tests/fixtures/silent.webm"],
+    "artifactName": "paid-to-watch-${version}-${os}-${arch}.${ext}",
+    "icon": "assets/icon.png",
+    "win": { "target": ["nsis", "zip"], "signAndEditExecutable": true },
+    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": "always", "createStartMenuShortcut": true, "runAfterFinish": false },
+    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.entertainment", "extendInfo": { "LSUIElement": true } },
+    "publish": { "provider": "github", "owner": "lyzbcy", "repo": "paid-to-watch" }
   }
 }

@@ -8,25 +8,26 @@ const cancelBtn = document.getElementById('cancel');
 let pendingAccel = null;
 
 window.api.getCurrentHotkey().then((hk) => {
-  currentEl.textContent = hk.replace('CommandOrControl', 'Ctrl');
+  currentEl.textContent = window.api.displayAccelerator(hk);
 });
 
 document.addEventListener('keydown', (e) => {
   e.preventDefault();
   const accel = window.api.buildAccelerator({
     ctrl: e.ctrlKey,
+    meta: e.metaKey,
     alt: e.altKey,
     shift: e.shiftKey,
     key: e.key,
   });
   if (accel) {
     pendingAccel = accel;
-    previewEl.textContent = accel.replace('CommandOrControl', 'Ctrl');
+    previewEl.textContent = window.api.displayAccelerator(accel);
     errorEl.textContent = '';
     saveBtn.disabled = false;
   } else {
     pendingAccel = null;
-    previewEl.textContent = '组合无效,至少需要 Ctrl/Alt/Shift + 一个字母/数字/F键';
+    previewEl.textContent = '组合无效，需要 Command/Ctrl/Option/Alt/Shift + 字母/数字/F键';
     saveBtn.disabled = true;
   }
 });

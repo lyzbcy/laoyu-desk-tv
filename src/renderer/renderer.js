@@ -50,7 +50,7 @@ function play(video, index) {
   currentIndex = index;
   videoEl.src = video.url;
   videoEl.classList.add('playing');
-  videoEl.play();
+  if(!bossOn&&!liveOn)videoEl.play().catch(e=>window.api.mediaError(e.name));
 }
 
 // 播完当前视频 → 切到下一个(循环);多个视频靠这个顺序播放,不展示文件名列表
@@ -86,24 +86,30 @@ function showAd() {
   videoEl.pause();
 }
 
-window.api.onBossKey(() => {
-  if (bossOn) {
-    bossOn = false;
+function applyState(payload) {
+  const state=payload.player,wasBoss=bossOn,wasLive=liveOn;
+  bossOn=state.bossOn;liveOn=state.liveOn;videoEl.muted=state.effectiveLocalMuted;
+  document.getElementById('sound-toggle').textContent=(liveOn?'直播':'本地')+'：'+((liveOn?state.liveMuted:state.localMuted)?'静音':'开声');
+  document.getElementById('play-status').textContent=payload.phase==='loading'||payload.phase==='error'?payload.message:bossOn?'广告模式 · 已静音':((liveOn?state.liveMuted:state.localMuted)?'点击声音可开启':'声音已开启');
+  if (!bossOn) {
     overlay.hidden = true;
-    if (liveOn) return; // 直播模式下本地视频保持暂停,由网页直播顶替显示
+    if (liveOn) {videoEl.pause();videoEl.classList.remove('playing');emptyEl.style.display='none';return;}
     if (videoEl.ended) {
-      playNext();
-    } else {
-      videoEl.play();
+      if(wasBoss)playNext();
+    } else if(videoEl.src && (wasBoss || wasLive)) {
+      videoEl.classList.add('playing');videoEl.play().catch(e=>window.api.mediaError(e.name));
     }
   } else {
     showAd();
   }
-});
+}
+window.api.onPlayerState(applyState);
+document.getElementById('sound-toggle').addEventListener('click',()=>window.api.toggleSound().then(applyState));
+document.getElementById('open-controls').addEventListener('click',()=>window.api.openControls());
 
 // 视频自然播完 → 自动切到全屏假广告(和按老板键效果一样)
 videoEl.addEventListener('ended', () => {
-  if (!bossOn && !liveOn) showAd();
+  if (!bossOn && !liveOn) window.api.videoEnded();
 });
 
 document.getElementById('fake-close').addEventListener('click', () => {
@@ -114,20 +120,6 @@ window.api.onPickFolderFromTray(() => window.__loadFolder());
 
 // 网页直播由主进程的 BrowserView 叠加在 .stage 区域上方显示,
 // 这里只需要在切换时暂停/恢复本地视频,避免两边同时占用这块区域。
-window.api.onToggleLive((on) => {
-  liveOn = on;
-  if (on) {
-    videoEl.pause();
-    videoEl.classList.remove('playing');
-    emptyEl.style.display = 'none';
-  } else if (videos.length) {
-    videoEl.classList.add('playing');
-    videoEl.play();
-  } else {
-    emptyEl.style.display = 'flex';
-  }
-});
-
 // 直播设置模式:放大窗口时显示地址栏,可跳转到任意网页(B站、网页游戏等)
 const addrBar = document.getElementById('addr-bar');
 const addrInput = document.getElementById('addr-input');
@@ -146,5 +138,6 @@ window.api.onSetupMode((on) => {
 // 启动时:有记住的文件夹就直接加载
 (async () => {
   const cfg = await window.api.getConfig();
+  applyState(await window.api.getPlayerState());
   if (cfg.videoFolder) await openFolder(cfg.videoFolder);
 })();

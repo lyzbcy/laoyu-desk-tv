@@ -9,6 +9,7 @@ html, body, #app { height: 100%; width: 100%; }
 .fake-close { -webkit-app-region: no-drag; color: #aaa; font-size: 16px;
               width: 28px; text-align: center; cursor: pointer; }
 .fake-close:hover { background: #e81123; color: #fff; }
+.titlebar button{border:0;background:transparent;color:#ccc;font-size:10px;padding:0 5px;-webkit-app-region:no-drag;cursor:pointer}.titlebar button:hover{background:#333}.play-status{flex:1;min-width:0;font-size:10px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:5px}
 
 /* 上下假广告横幅 */
 .ad-banner { height: 70px; color: #fff; display: flex; flex-direction: column;

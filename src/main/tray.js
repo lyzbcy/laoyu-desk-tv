@@ -9,6 +9,7 @@ function buildMenu(callbacks, state) {
     { label: '选择视频文件夹', click: () => callbacks.onPickFolder() },
     { label: '显示 / 隐藏', click: () => callbacks.onToggleShow() },
     { label: '设置老板键', click: () => callbacks.onSetHotkey() },
+    { label: '本地视频声音', type: 'checkbox', checked: !state.localMuted, click: () => callbacks.onToggleLocalSound() },
     { type: 'separator' },
     { label: '网页直播', type: 'checkbox', checked: state.liveOn, click: () => callbacks.onToggleLive() },
     { label: '直播声音', type: 'checkbox', checked: !state.liveMuted, click: () => callbacks.onToggleLiveSound() },
@@ -27,11 +28,13 @@ function buildMenu(callbacks, state) {
     },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
+    { label: '设置 / 遇到问题反馈', click: () => callbacks.onOpenControls() },
+    { label: `带薪看片 ${state.version || ''}`, enabled: false },
   ]);
 }
 
 function createTray(callbacks, state) {
-  const tray = new Tray(path.join(__dirname, '../../assets/tray.png'));
+  const tray = new Tray(path.join(__dirname, process.platform === 'darwin' ? '../../assets/trayTemplate.png' : '../../assets/tray.png'));
   tray.setToolTip('带薪看片');
   tray.setContextMenu(buildMenu(callbacks, state));
   return tray;

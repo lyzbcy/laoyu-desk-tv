@@ -15,7 +15,9 @@ function loadConfig() {
 }
 
 function saveConfig(cfg) {
-  fs.writeFileSync(file(), JSON.stringify(cfg, null, 2), 'utf-8');
+  const target=file(),temporary=target+'.'+process.pid+'.tmp';
+  try{fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(temporary,JSON.stringify(cfg,null,2),'utf8');fs.renameSync(temporary,target);return true;}
+  catch{try{fs.unlinkSync(temporary);}catch{}return false;}
 }
 
 module.exports = { loadConfig, saveConfig };

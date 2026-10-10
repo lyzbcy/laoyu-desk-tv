@@ -6,18 +6,20 @@ function normalizeKey(key) {
 }
 
 // 根据按键状态构造 Electron accelerator 字符串;至少需要一个修饰键 + 一个普通键,否则返回 null
-function buildAccelerator({ ctrl, alt, shift, key }) {
+function buildAccelerator({ ctrl, meta, alt, shift, key }, platform = process.platform) {
   if (!key) return null;
   const normalized = normalizeKey(key);
   if (!KEY_RE.test(normalized)) return null;
-  if (!ctrl && !alt && !shift) return null;
+  if (!ctrl && !meta && !alt && !shift) return null;
 
   const parts = [];
-  if (ctrl) parts.push('CommandOrControl');
+  if (meta) parts.push('Command');
+  if (ctrl) parts.push(platform === 'darwin' ? 'Control' : 'CommandOrControl');
   if (alt) parts.push('Alt');
   if (shift) parts.push('Shift');
   parts.push(normalized);
   return parts.join('+');
 }
 
-module.exports = { buildAccelerator };
+function displayAccelerator(value, platform=process.platform){return value.replace('CommandOrControl',platform==='darwin'?'Command':'Ctrl').replace('Control','Ctrl').replace('Alt',platform==='darwin'?'Option':'Alt');}
+module.exports = { buildAccelerator, displayAccelerator };

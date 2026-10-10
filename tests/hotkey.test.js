@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import hotkey from '../src/core/hotkey.js';
 
-const { buildAccelerator } = hotkey;
+const buildAccelerator = (state, platform='win32') => hotkey.buildAccelerator(state,platform);
 
 describe('buildAccelerator', () => {
+  it('Mac Command is captured and Control stays Control',()=>{expect(buildAccelerator({meta:true,alt:true,key:'q'},'darwin')).toBe('Command+Alt+Q');expect(buildAccelerator({ctrl:true,key:'q'},'darwin')).toBe('Control+Q');});
   it('组合修饰键 + 字母 → accelerator 字符串', () => {
     expect(buildAccelerator({ ctrl: true, alt: true, shift: false, key: 'q' })).toBe(
       'CommandOrControl+Alt+Q'

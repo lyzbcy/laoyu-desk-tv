@@ -1,0 +1,47 @@
+name: Desktop validation and builds
+on:
+  push:
+    branches: ['master', 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Isolated real Electron UI regression
+        shell: bash
+        env:
+          PAID_SMOKE_OUTPUT: verification/ui
+        run: node_modules/.bin/electron . --paid-to-watch-smoke --disable-gpu --no-sandbox
+      - name: Windows installer and portable ZIP
+        if: runner.os == 'Windows'
+        run: npm run dist:win
+      - name: Mac Intel and Apple Silicon packages
+        if: runner.os == 'macOS'
+        run: npm run dist:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paid-to-watch-${{ runner.os }}
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/*.dmg
+            dist/*.yml
+            verification/ui/*
+          if-no-files-found: error
