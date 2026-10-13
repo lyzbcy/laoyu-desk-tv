@@ -15,6 +15,7 @@ try{
  if($p.appId -ne 'com.laoyu.paidtowatch' -or $p.token -notmatch '^[a-f0-9-]{36}$' -or $p.version -notmatch '^\d+\.\d+\.\d+$' -or (Sha256 $p.file) -ne $p.sha256){throw 'invalid package'}
  $writeProbe=Join-Path $root ('.desk-update-write-'+[Guid]::NewGuid().ToString('N')+'.tmp');$probeStream=[IO.File]::Open($writeProbe,[IO.FileMode]::CreateNew);$probeStream.Dispose();[IO.File]::Delete($writeProbe)
  $registryBefore=@(Get-DeskTvRecords $root);$shortcutBefore=@{};$shortcutFiles=Get-DeskTvLinks;$shortcutBackup=Join-Path $job 'shortcut-backup';New-Item -ItemType Directory -Path $shortcutBackup -Force|Out-Null
+ $oldVersion=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion -replace '\.0$',''
  foreach($link in $shortcutFiles){if(Test-Path -LiteralPath $link){if(-not [DeskTvInstallPaths]::Same([DeskTvInstallPaths]::LinkTarget($link),$exe)){throw 'custom shortcut target'};$saved=Join-Path $shortcutBackup ([Guid]::NewGuid().ToString('N')+'.lnk');Copy-Item -LiteralPath $link -Destination $saved;$shortcutBefore[$link]=$saved}}
  $desktopRequired=Test-Path -LiteralPath $shortcutFiles[1]
  New-Item -ItemType Directory -Path $backup -Force|Out-Null
@@ -50,9 +51,16 @@ try{
  if($installStarted){try{
   # Only stop the runtime at this exact validated installation path before restoring it.
   Get-Process | Where-Object { try { $_.Path -eq $exe } catch { $false } } | Stop-Process -Force
-  foreach($entry in Get-ChildItem -LiteralPath $backup){Copy-Item -LiteralPath $entry.FullName -Destination (Join-Path $root $entry.Name) -Recurse -Force}
+  foreach($entry in Get-ChildItem -LiteralPath $backup){
+   $destination=[IO.Path]::GetFullPath((Join-Path $root $entry.Name))
+   if([IO.Path]::GetDirectoryName($destination) -ne $root -or ($entry.PSIsContainer -and $entry.Name -notin @('resources','locales'))){throw 'invalid recovery path'}
+   # Copy-Item into an existing directory otherwise creates resources/resources.
+   if($entry.PSIsContainer -and (Test-Path -LiteralPath $destination)){Remove-Item -LiteralPath $destination -Recurse -Force}
+   Copy-Item -LiteralPath $entry.FullName -Destination $destination -Recurse -Force
+  }
   Restore-DeskTvRecords $root $registryBefore
   foreach($link in $shortcutFiles){if($shortcutBefore.ContainsKey($link)){Copy-Item -LiteralPath $shortcutBefore[$link] -Destination $link -Force}elseif(Test-Path -LiteralPath $link){if([DeskTvInstallPaths]::Same([DeskTvInstallPaths]::LinkTarget($link),$exe)){Remove-Item -LiteralPath $link -Force}}}
+  Test-DeskTvInstallation $root $oldVersion $desktopRequired|Out-Null
   $rollbackSucceeded=$true
   Start-Process -FilePath $exe -WorkingDirectory $root -WindowStyle Normal|Out-Null
  }catch{}}

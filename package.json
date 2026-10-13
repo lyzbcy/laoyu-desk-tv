@@ -1,6 +1,6 @@
 {
   "name": "laoyu-desk-tv",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Laoyu Desk TV · 捞鱼桌脚看电视，桌面小窗视频播放器",
   "main": "src/main/main.js",
   "license": "MIT",
