@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process'),crypto=require('node:crypto'),assert=require('node:assert/strict'),asar=require('@electron/asar');
 if(process.env.GITHUB_ACTIONS!=='true'||process.env.RUNNER_OS!=='Windows'||process.platform!=='win32')throw Error('Temporary hosted Windows only');
-const oldVersion=process.env.DESK_OLD_VERSION||'0.3.7',newVersion=process.env.DESK_NEW_VERSION||'0.3.9',repo='lyzbcy/laoyu-desk-tv';
+const oldVersion=process.env.DESK_OLD_VERSION||'0.3.7',newVersion=process.env.DESK_NEW_VERSION||'0.3.11',repo='lyzbcy/laoyu-desk-tv';
 for(const v of [oldVersion,newVersion])assert.match(v,/^\d+\.\d+\.\d+$/);
 assert.notEqual(oldVersion,'0.3.3','Recovery must test the repaired immutable baseline');
 const out=path.resolve('verification/recovery-'+oldVersion+'-to-'+newVersion),root=fs.mkdtempSync(path.join(process.env.RUNNER_TEMP,'desk-tv-recovery-')),installed=path.join(root,'installed'),job=path.join(root,'job');

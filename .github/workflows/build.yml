@@ -25,7 +25,7 @@ on:
         default: '0.3.3'
       new_version:
         description: Exact immutable update target
-        default: '0.3.9'
+        default: '0.3.11'
       metadata_fixture:
         description: Explicit candidate metadata fixture, never formal online discovery
         type: boolean
