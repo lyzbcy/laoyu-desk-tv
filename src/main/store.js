@@ -2,10 +2,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { app } = require('electron');
 const { mergeConfig } = require('../core/config');
 
-const file = () => path.join(app.getPath('userData'), 'config.json');
+const file = () => path.join(require('electron').app.getPath('userData'), 'config.json');
 let writeBlocked=false,warning='';
 function readConfig(target){
  try{const value=JSON.parse(fs.readFileSync(target,'utf8').replace(/^\uFEFF/,''));if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid configuration');return {config:mergeConfig(value),warning:'',blocked:false};}
