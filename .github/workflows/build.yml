@@ -16,12 +16,16 @@ on:
         description: Inject one post-install failure into a copied immutable helper on hosted Windows
         type: boolean
         default: false
+      center_product:
+        description: Verify immutable official software center fresh download, preparation and reopen
+        type: boolean
+        default: false
       old_version:
         description: Exact immutable installed baseline
         default: '0.3.3'
       new_version:
         description: Exact immutable update target
-        default: '0.3.5'
+        default: '0.3.7'
       metadata_fixture:
         description: Explicit candidate metadata fixture, never formal online discovery
         type: boolean
@@ -34,7 +38,7 @@ permissions:
   contents: write
 jobs:
   desktop:
-    if: ${{ !inputs.installed_update && !inputs.recovery_test && inputs.transfer_run == '' }}
+    if: ${{ !inputs.installed_update && !inputs.recovery_test && !inputs.center_product && inputs.transfer_run == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -159,3 +163,22 @@ jobs:
         with:
           name: installed-recovery-${{ inputs.old_version }}-to-${{ inputs.new_version }}
           path: verification/recovery-*/**
+  center-product:
+    if: ${{ inputs.center_product }}
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.21.0'
+      - name: Exact official center downloads current product despite old cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DESK_NEW_VERSION: ${{ inputs.new_version }}
+        run: node scripts/ci-center-product.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: center-product-${{ inputs.new_version }}
+          path: verification/center-product/**
