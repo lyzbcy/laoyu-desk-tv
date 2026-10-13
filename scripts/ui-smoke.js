@@ -7,8 +7,9 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
  const output=process.env.PAID_SMOKE_OUTPUT||process.cwd();fs.mkdirSync(output,{recursive:true});
  let server,closeListener,completed=false;
  try{
-  await waitFor('typeof window.api!=="undefined" && document.querySelector("#ad-brand").textContent && [...document.querySelectorAll(".cover-image")].every(i=>i.complete&&i.naturalWidth>0)');
-  const noDisclosure=async()=>assert(await evaluate('!/(本地|静音|开声|设置|反馈|文件夹|默认|捞鱼)/.test(document.body.innerText) && !document.querySelector("#open-controls,#open-feedback,#sound-toggle,#play-status")'),'card must not disclose software controls or diagnostics');
+  await waitFor('typeof window.api!=="undefined" && document.querySelector("#ad-brand").textContent==="捞鱼" && document.querySelectorAll(".promotion-product img").length===6 && [...document.querySelectorAll(".promotion-product img")].every(i=>i.complete&&i.naturalWidth>0)');
+  const noDisclosure=async()=>assert(await evaluate('!/(本地|静音|开声|设置|反馈|文件夹|默认|桌脚看电视)/.test(document.body.innerText) && !document.querySelector("#open-controls,#open-feedback,#sound-toggle,#play-status")'),'card must not disclose player controls or diagnostics');
+  assert.equal(await evaluate('window.api.openCatalog()'),true,'fixed catalog IPC uses an external-browser stub only in isolated smoke');
   await noDisclosure();
   await sleep(250);
   fs.writeFileSync(path.join(output,'player-empty.png'),(await mainWindow.webContents.capturePage()).toPNG());
@@ -36,7 +37,7 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
   dispatch({type:'toggle-boss'});assert.equal(liveView.webContents.isAudioMuted(),true);assert.equal(liveView.getBounds().height,0);
   dispatch({type:'toggle-boss'});assert.equal(liveView.webContents.isAudioMuted(),false);assert(liveView.getBounds().height>0);
   callbacks.onSelectFavorite('http://127.0.0.1:'+server.address().port+'/fail');for(let i=0;i<100&&getState().phase!=='error';i++)await sleep(50);assert.equal(getState().phase,'error');assert.equal(liveView.webContents.isAudioMuted(),true);assert.equal(liveView.getBounds().height,0);await waitFor('!document.querySelector("#video-empty").hidden');await noDisclosure();
-  await callbacks.onSelectFavorite('http://127.0.0.1:'+server.address().port+'/retry');assert.equal(getState().phase,'ready');assert.equal(liveView.webContents.isAudioMuted(),false);
+  const retried=await callbacks.onSelectFavorite('http://127.0.0.1:'+server.address().port+'/retry');assert.equal(retried,true,'actual retry loadURL must succeed');assert.equal(getState().phase,'ready');assert.equal(liveView.webContents.isAudioMuted(),false);
   callbacks.onToggleLive();assert.equal(liveView.webContents.isAudioMuted(),true);
   callbacks.onOpenFeedback();await sleep(100);const panel=callbacks.onOpenControls();
   let panelReady=false;
@@ -86,6 +87,6 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
   server.closeAllConnections();server.close();server=null;
   closeListener=()=>{completed=true;fs.writeFileSync(path.join(output,'close-card.json'),JSON.stringify({status:'passed',action:'actual renderer close button triggered app.quit; parent process must return zero'}));console.log('CARD_CLOSE_OK');};app.once('before-quit',closeListener);
   await evaluate('document.querySelector("#close-card").click();true');await sleep(300);throw Error('Close button did not quit the application');
- }finally{if(closeListener)app.removeListener('before-quit',closeListener);clearTimeout(watchdog);server?.closeAllConnections();server?.close();if(!completed)app.exit(2);else app.quit();}
+ }catch(error){console.error(error.stack);throw error;}finally{if(closeListener)app.removeListener('before-quit',closeListener);clearTimeout(watchdog);server?.closeAllConnections();server?.close();if(!completed)app.exit(2);else app.quit();}
 }
 module.exports={run};

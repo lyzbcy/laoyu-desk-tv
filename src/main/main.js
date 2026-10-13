@@ -22,7 +22,7 @@ else app.setPath('userData',path.join(app.getPath('appData'),'paid-to-watch'));
 const ownsInstance=smoke||app.requestSingleInstanceLock();
 if(!ownsInstance)app.quit();
 let mainWindow,tray,liveView,config,state,logger,updater,callbacks,privacy,feedback;
-let setupMode=false,savedBounds=null,liveLoaded=false,liveLoadFailed=false,phase='idle',statusMessage='默认静音，可点击声音开关开启';
+let setupMode=false,savedBounds=null,liveLoaded=false,liveLoadFailed=false,liveNavigationRevision=0,phase='idle',statusMessage='默认静音，可点击声音开关开启';
 const {stageBounds: cardStageBounds,DEFAULT_CARD}=require('../core/cardLayout');
 const safeWindow=()=>mainWindow&&!mainWindow.isDestroyed();
 const record=(level,event,fields)=>logger?.log(level,event,fields);
@@ -88,14 +88,18 @@ ipcMain.handle('feedback',(event,token)=>feedback.submit(token,event.sender.id))
 ipcMain.handle('dismiss-feedback-invite',()=>{const dismissedAt=new Date(),next={...config,engagement:{...config.engagement,lastDismissDay:day(dismissedAt),lastDismissAt:dismissedAt.toISOString()}};if(!saveConfig(next))throw Error('提醒偏好保存失败，请重试');config=next;updateView();return controlState();});
 ipcMain.handle('open-project',()=>smoke?true:shell.openExternal('https://github.com/lyzbcy/laoyu-desk-tv'));
 ipcMain.handle('open-author-home',()=>smoke?true:shell.openExternal('https://lyzbcy.github.io/'));
+ipcMain.handle('open-catalog',()=>smoke?true:shell.openExternal('https://help.wshoto.com/resource/5ea68b60e5b24df78ddce46cf1614671/27da304c.html'));
 function goToUrl(value){
   if(typeof value!=='string'||value.length>4096)return;
   let url;try{url=new URL(/^https?:\/\//i.test(value)?value:'https://'+value);if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw Error('invalid');}
   catch{statusMessage='请输入有效的网页地址';phase='error';updateView();return;}
+  const revision=++liveNavigationRevision;
+  liveView.webContents.stop();liveLoadFailed=false;
   config={...config,liveUrl:url.toString()};saveConfig(config);
   dispatch({type:'live',value:true});liveLoaded=true;phase='loading';statusMessage='正在加载网页…';updateView();
-  return liveView.webContents.loadURL(url.toString()).catch(()=>{});
+  return liveView.webContents.loadURL(url.toString()).then(()=>{if(revision===liveNavigationRevision){liveLoadFailed=false;liveReady();}return true;}).catch(error=>{if(revision===liveNavigationRevision&&error.code!=='ERR_ABORTED'){liveLoadFailed=true;phase='error';statusMessage='网页加载失败，可重试或更换网址';updateView();}return false;});
 }
+function liveReady(){phase='ready';statusMessage='网页已就绪';liveView.webContents.setZoomFactor(setupMode?1:0.6);record('info','live.ready');updateView();}
 ipcMain.on('navigate-live',(_event,url)=>goToUrl(url));
 app.on('second-instance',()=>{if(safeWindow()){mainWindow.show();mainWindow.focus();}});
 app.on('activate',()=>{if(safeWindow())mainWindow.show();});
@@ -115,8 +119,8 @@ if(ownsInstance)app.whenReady().then(async()=>{
   liveView=new BrowserView({webPreferences:{contextIsolation:true,sandbox:true,partition:smoke?'smoke-live':'persist:live'}});
   liveView.webContents.setAudioMuted(true);mainWindow.addBrowserView(liveView);liveView.setBounds({x:0,y:0,width:0,height:0});
   liveView.webContents.on('enter-html-full-screen',updateView);liveView.webContents.on('leave-html-full-screen',updateView);
-  liveView.webContents.on('did-start-loading',()=>{liveLoadFailed=false;phase='loading';statusMessage='正在加载网页…';updateView();});
-  liveView.webContents.on('did-finish-load',()=>{if(liveLoadFailed)return;phase='ready';statusMessage='网页已就绪';liveView.webContents.setZoomFactor(setupMode?1:0.6);record('info','live.ready');updateView();});
+  liveView.webContents.on('did-start-navigation',(_event,_url,isInPlace,isMainFrame)=>{if(!isMainFrame||isInPlace)return;liveLoadFailed=false;phase='loading';statusMessage='正在加载网页…';updateView();});
+  liveView.webContents.on('did-finish-load',()=>{if(!liveLoadFailed)liveReady();});
   liveView.webContents.on('did-fail-load',(_e,code,_description,_url,isMainFrame)=>{if(code===-3||isMainFrame===false)return;liveLoadFailed=true;phase='error';statusMessage='网页加载失败，可重试或更换网址';record('warn','live.failed',{code});updateView();});
   if(!registerHotkey(config.hotkey)){statusMessage='老板键注册失败，请到设置换一个组合';record('warn','hotkey.start-failed');}
   callbacks={

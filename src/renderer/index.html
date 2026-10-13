@@ -8,7 +8,7 @@
   <body>
     <div id="app">
       <header class="card-header">
-        <span class="brand-mark" aria-hidden="true">▶</span>
+        <span class="brand-mark" aria-hidden="true">捞</span>
         <span id="ad-brand"></span>
         <span class="ad-label">广告</span>
         <button class="card-close" id="close-card" aria-label="关闭">×</button>
@@ -19,19 +19,13 @@
           <button id="addr-go">前往</button>
         </div>
         <video id="video" muted></video>
-        <div class="recommendation-cover" id="video-empty">
-          <img class="cover-image" alt="雨后的街角" />
-          <span class="cover-play" aria-hidden="true">▶</span>
-        </div>
-        <div class="recommendation-cover" id="boss-overlay" hidden>
-          <img class="cover-image" alt="雨后的街角" />
-          <span class="cover-play" aria-hidden="true">▶</span>
-        </div>
+        <div class="recommendation-cover" id="video-empty"></div>
+        <div class="recommendation-cover" id="boss-overlay" hidden></div>
       </div>
       <footer class="card-footer">
         <div class="category" id="ad-category"></div>
         <div class="recommendation-title" id="ad-title"></div>
-        <div class="recommendation-source" id="ad-subtitle"></div>
+        <div class="recommendation-meta"><span class="recommendation-source" id="ad-subtitle"></span><button id="open-catalog" class="catalog-link">了解更多 ›</button></div>
       </footer>
     </div>
     <script src="renderer.js"></script>

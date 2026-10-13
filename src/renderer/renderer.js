@@ -4,7 +4,18 @@ const recommendation = AD_TEMPLATES[0];
 for (const [id, value] of Object.entries({ 'ad-brand': recommendation.brand,
   'ad-category': recommendation.category, 'ad-title': recommendation.title,
   'ad-subtitle': recommendation.subtitle })) document.getElementById(id).textContent = value;
-document.querySelectorAll('.cover-image').forEach(img => { img.src = recommendation.cover; });
+document.querySelectorAll('.recommendation-cover').forEach(cover => {
+  const eyebrow = document.createElement('div');eyebrow.className='promotion-eyebrow';eyebrow.textContent=recommendation.category;
+  const headline = document.createElement('div');headline.className='promotion-headline';headline.textContent=recommendation.headline;
+  const products = document.createElement('div');products.className='promotion-products';
+  for (const product of recommendation.products) {
+    const item=document.createElement('div');item.className='promotion-product';
+    const icon=document.createElement('img');icon.src=product.icon;icon.alt='';
+    const name=document.createElement('span');name.textContent=product.name;item.append(icon,name);products.append(item);
+  }
+  cover.append(eyebrow,headline,products);
+});
+document.getElementById('open-catalog').addEventListener('click',()=>window.api.openCatalog());
 
 const videoEl = document.getElementById('video');
 const emptyEl = document.getElementById('video-empty');

@@ -6,7 +6,7 @@ html, body, #app { height: 100%; width: 100%; }
 .card-header { flex: 0 0 39px; display: flex; align-items: center; gap: 7px;
   padding: 0 8px 0 12px; -webkit-app-region: drag; }
 .brand-mark { width: 20px; height: 20px; border-radius: 5px; background: #5a7164;
-  color: #fff; font-size: 10px; display: grid; place-items: center; padding-left: 1px; }
+  color: #fff; font-size: 12px; display: grid; place-items: center; }
 #ad-brand { font-size: 12px; font-weight: 500; }
 .ad-label { margin-left: auto; font-size: 10px; line-height: 15px; color: #a0a5a1;
   border: 1px solid #dce0dc; border-radius: 3px; padding: 0 3px; }
@@ -20,16 +20,23 @@ html, body, #app { height: 100%; width: 100%; }
 .recommendation-title { font-size: 14px; font-weight: 500; line-height: 24px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .recommendation-source { font-size: 10px; color: #969d97; line-height: 16px; }
+.recommendation-meta { display: flex; align-items: center; justify-content: space-between; }
+.catalog-link { -webkit-app-region: no-drag; border: 0; background: transparent; color: #617868;
+  font: inherit; font-size: 11px; line-height: 16px; cursor: pointer; }
+.catalog-link:hover { color: #2e5940; text-decoration: underline; }
 .stage { flex: 1; min-height: 0; position: relative; background: #171c19; }
 #video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; }
 #video.playing { display: block; }
-.recommendation-cover { position: absolute; inset: 0; overflow: hidden; }
+.recommendation-cover { position: absolute; inset: 0; overflow: hidden; background: #f2f3ed;
+  display: flex; flex-direction: column; justify-content: center; padding: 12px 18px; }
 .recommendation-cover[hidden] { display: none; }
-.cover-image { width: 100%; height: 100%; object-fit: cover; display: block; }
-.cover-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: 38px; height: 38px; border: 1px solid #ffffff9c; border-radius: 50%;
-  display: grid; place-items: center; padding-left: 2px; color: #fff; font-size: 14px;
-  background: #26352e38; pointer-events: none; }
+.promotion-eyebrow { color: #819080; font-size: 10px; line-height: 18px; letter-spacing: 1px; }
+.promotion-headline { color: #3c5142; font-size: 26px; font-weight: 600; line-height: 38px; letter-spacing: -1px; }
+.promotion-products { display: flex; gap: 8px; margin-top: 14px; }
+.promotion-product { min-width: 0; flex: 1; display: flex; flex-direction: column; align-items: center;
+  border: 1px solid #e0e5d9; border-radius: 7px; background: #ffffff8c; padding: 9px 2px 7px; gap: 6px; }
+.promotion-product img { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; }
+.promotion-product span { font-size: 10px; color: #6c776c; white-space: nowrap; }
 #boss-overlay { z-index: 10; }
 .addr-bar { position: absolute; top: 0; left: 0; right: 0; height: 32px; z-index: 5;
   display: flex; gap: 4px; padding: 4px; background: #222; }
