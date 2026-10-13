@@ -4,7 +4,8 @@ if($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows'){throw 'Tempo
 $request=[IO.File]::ReadAllText($RequestFile,[Text.Encoding]::UTF8)|ConvertFrom-Json
 . (Join-Path $PSScriptRoot '../src/helpers/windows-install.ps1')
 if($request.operation -eq 'installation'){Test-DeskTvInstallation $request.root $request.version ([bool]$request.desktopRequired)|ConvertTo-Json -Depth 5 -Compress;exit}
-if($request.operation -eq 'snapshot'){@{records=@(Get-DeskTvRecords $request.root);shortcuts=@(Get-DeskTvLinks|Where-Object {Test-Path -LiteralPath $_}|ForEach-Object {@{path=$_;sha256=(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash.ToLowerInvariant()}})}|ConvertTo-Json -Depth 12 -Compress;exit}
+function Hosted-Sha256($file){$stream=[IO.File]::OpenRead($file);$hash=[Security.Cryptography.SHA256]::Create();try{([BitConverter]::ToString($hash.ComputeHash($stream))).Replace('-','').ToLowerInvariant()}finally{$stream.Dispose();$hash.Dispose()}}
+if($request.operation -eq 'snapshot'){@{records=@(Get-DeskTvRecords $request.root);shortcuts=@(Get-DeskTvLinks|Where-Object {Test-Path -LiteralPath $_}|ForEach-Object {@{path=$_;sha256=(Hosted-Sha256 $_)}})}|ConvertTo-Json -Depth 12 -Compress;exit}
 Add-Type -AssemblyName System.Drawing
 Add-Type @'
 using System; using System.Runtime.InteropServices; using System.Text;
