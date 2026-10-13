@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "paid-to-watch",
   "name": "捞鱼桌脚看电视",
-  "version": "0.3.7",
+  "version": "0.3.11",
   "platform": "win32",
   "architecture": "x64",
   "executable": "捞鱼桌脚看电视.exe",
@@ -13,9 +13,9 @@
   "videoIds": [],
   "package": {
     "type": "portable-zip",
-    "path": "dist/laoyu-desk-tv-0.3.7-win-x64.zip",
-    "url": "https://github.com/lyzbcy/laoyu-desk-tv/releases/download/v0.3.7/laoyu-desk-tv-0.3.7-win-x64.zip",
-    "sha256": "40a7389d6b8963630985d911a9452b6c9901e94de9b41ceb141f98919350c553"
+    "path": "dist/laoyu-desk-tv-0.3.11-win-x64.zip",
+    "url": "https://github.com/lyzbcy/laoyu-desk-tv/releases/download/v0.3.11/laoyu-desk-tv-0.3.11-win-x64.zip",
+    "sha256": "41b7b0ce34986af100f737fd1b621913a33eb397ca1b76ece72cfe35e0117f33"
   },
   "installation": {
     "displayName": "捞鱼桌脚看电视"
