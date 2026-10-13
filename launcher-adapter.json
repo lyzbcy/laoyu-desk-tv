@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "id": "paid-to-watch",
   "name": "捞鱼桌脚看电视",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "platform": "win32",
   "architecture": "x64",
   "executable": "捞鱼桌脚看电视.exe",
   "category": "桌面效率",
-  "summary": "在假广告窗口播放本地视频或网页，老板键遮挡并静音。",
+  "summary": "在捞鱼软件推荐卡片中播放本地视频或网页，老板键遮挡并静音。",
   "siteUrl": "https://github.com/lyzbcy/laoyu-desk-tv",
   "iconPath": "assets/icon.png",
   "videoIds": [],
   "package": {
     "type": "portable-zip",
-    "path": "dist/laoyu-desk-tv-0.3.11-win-x64.zip",
-    "url": "https://github.com/lyzbcy/laoyu-desk-tv/releases/download/v0.3.11/laoyu-desk-tv-0.3.11-win-x64.zip",
-    "sha256": "41b7b0ce34986af100f737fd1b621913a33eb397ca1b76ece72cfe35e0117f33"
+    "path": "dist/laoyu-desk-tv-0.3.12-win-x64.zip",
+    "url": "https://github.com/lyzbcy/laoyu-desk-tv/releases/download/v0.3.12/laoyu-desk-tv-0.3.12-win-x64.zip",
+    "sha256": "4d8b30199f4736356889a0c89cd384ed8d2b6368f28522a0b5b2ec48c89280bb"
   },
   "installation": {
     "displayName": "捞鱼桌脚看电视"
