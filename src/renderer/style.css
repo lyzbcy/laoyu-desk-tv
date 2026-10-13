@@ -1,47 +1,40 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #app { height: 100%; width: 100%; }
-#app { display: flex; flex-direction: column; background: #000; overflow: hidden;
-       font-family: "Microsoft YaHei", sans-serif; }
-
-/* 可拖动标题条 + 假关闭 */
-.titlebar { height: 22px; background: #1a1a1a; -webkit-app-region: drag;
-            display: flex; justify-content: flex-end; align-items: center; }
-.fake-close { -webkit-app-region: no-drag; color: #aaa; font-size: 16px;
-              width: 28px; text-align: center; cursor: pointer; }
-.fake-close:hover { background: #e81123; color: #fff; }
-.titlebar button{border:0;background:transparent;color:#ccc;font-size:10px;padding:0 5px;-webkit-app-region:no-drag;cursor:pointer}.titlebar button:hover{background:#333}.play-status{flex:1;min-width:0;font-size:10px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:5px}
-
-/* 上下假广告横幅 */
-.ad-banner { height: 70px; color: #fff; display: flex; flex-direction: column;
-             justify-content: center; padding: 6px 10px; cursor: pointer;
-             overflow: hidden; }
-.ad-banner .ad-title { font-size: 13px; font-weight: bold; }
-.ad-banner .ad-sub { font-size: 11px; opacity: .9; }
-.ad-banner .ad-btn { align-self: flex-start; margin-top: 3px; font-size: 11px;
-                     background: rgba(255,255,255,.9); color: #c00; border-radius: 10px;
-                     padding: 1px 8px; }
-
-/* 中间视频区 */
-.stage { flex: 1; position: relative; background: #000; }
-#video { width: 100%; height: 100%; object-fit: contain; display: none; }
+#app { display: flex; flex-direction: column; background: #fff; overflow: hidden;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif; color: #303533;
+  border: 1px solid #e4e6e3; }
+.card-header { flex: 0 0 39px; display: flex; align-items: center; gap: 7px;
+  padding: 0 8px 0 12px; -webkit-app-region: drag; }
+.brand-mark { width: 20px; height: 20px; border-radius: 5px; background: #5a7164;
+  color: #fff; font-size: 10px; display: grid; place-items: center; padding-left: 1px; }
+#ad-brand { font-size: 12px; font-weight: 500; }
+.ad-label { margin-left: auto; font-size: 10px; line-height: 15px; color: #a0a5a1;
+  border: 1px solid #dce0dc; border-radius: 3px; padding: 0 3px; }
+.card-close { -webkit-app-region: no-drag; width: 22px; height: 26px;
+  border: 0; background: transparent; color: #9b9f9c; font-size: 20px;
+  font-family: Arial, sans-serif; cursor: pointer; }
+.card-close:hover { color: #424843; background: #f1f3f0; border-radius: 3px; }
+.card-close:focus-visible { outline: 1px solid #5a7164; }
+.card-footer { flex: 0 0 75px; padding: 8px 12px 9px; -webkit-app-region: drag; }
+.category { font-size: 10px; color: #7b8a7f; line-height: 14px; }
+.recommendation-title { font-size: 14px; font-weight: 500; line-height: 24px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recommendation-source { font-size: 10px; color: #969d97; line-height: 16px; }
+.stage { flex: 1; min-height: 0; position: relative; background: #171c19; }
+#video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; }
 #video.playing { display: block; }
-.video-empty { position: absolute; inset: 0; display: flex; align-items: center;
-               justify-content: center; color: #777; font-size: 12px; text-align: center; }
-
-/* 直播设置模式下的地址栏,平时隐藏,放大窗口时才出现 */
+.recommendation-cover { position: absolute; inset: 0; overflow: hidden; }
+.recommendation-cover[hidden] { display: none; }
+.cover-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 38px; height: 38px; border: 1px solid #ffffff9c; border-radius: 50%;
+  display: grid; place-items: center; padding-left: 2px; color: #fff; font-size: 14px;
+  background: #26352e38; pointer-events: none; }
+#boss-overlay { z-index: 10; }
 .addr-bar { position: absolute; top: 0; left: 0; right: 0; height: 32px; z-index: 5;
-            display: flex; gap: 4px; padding: 4px; background: #222; }
+  display: flex; gap: 4px; padding: 4px; background: #222; }
 .addr-bar[hidden] { display: none; }
-.addr-bar input { flex: 1; border: none; border-radius: 4px; padding: 0 8px;
-                  font-size: 13px; outline: none; }
+.addr-bar input { flex: 1; min-width: 0; border: none; border-radius: 4px; padding: 0 8px;
+  font-size: 13px; outline: none; }
 .addr-bar button { border: none; border-radius: 4px; padding: 0 12px;
-                   background: #4a90d9; color: #fff; font-size: 13px; cursor: pointer; }
-
-/* Boss Key 全屏假广告 */
-.boss-overlay { position: fixed; inset: 0; z-index: 9999; color: #fff;
-                display: flex; flex-direction: column; align-items: center;
-                justify-content: center; text-align: center; padding: 16px; }
-.boss-overlay[hidden] { display: none; }
-.boss-overlay .b-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
-.boss-overlay .b-btn { margin-top: 12px; background: #fff; color: #c00;
-                       border-radius: 16px; padding: 6px 18px; font-size: 14px; }
+  background: #4a90d9; color: #fff; font-size: 13px; cursor: pointer; }

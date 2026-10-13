@@ -8,6 +8,7 @@ function buildMenu(callbacks, state) {
   return Menu.buildFromTemplate([
     { label: '选择视频文件夹', click: () => callbacks.onPickFolder() },
     { label: '显示 / 隐藏', click: () => callbacks.onToggleShow() },
+    { label: '恢复推荐卡片大小', click: () => callbacks.onResetCardSize() },
     { label: '设置老板键', click: () => callbacks.onSetHotkey() },
     { label: '本地视频声音', type: 'checkbox', checked: !state.localMuted, click: () => callbacks.onToggleLocalSound() },
     { type: 'separator' },
@@ -28,7 +29,7 @@ function buildMenu(callbacks, state) {
     },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
-    { label: '设置', click: () => callbacks.onOpenControls() },
+    { label: state.updateAvailable ? '设置 · 发现新版' : '设置', click: () => callbacks.onOpenControls() },
     { label: '遇到问题反馈', click: () => callbacks.onOpenFeedback() },
     { label: `捞鱼桌脚看电视 ${state.version || ''}`, enabled: false },
   ]);

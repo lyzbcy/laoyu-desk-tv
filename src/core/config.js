@@ -1,7 +1,8 @@
 // src/core/config.js
+const { DEFAULT_CARD } = require('./cardLayout');
 const DEFAULT_CONFIG = {
   videoFolder: null,
-  window: { x: null, y: null, width: 360, height: 640 },
+  window: { x: null, y: null, ...DEFAULT_CARD },
   hotkey: 'CommandOrControl+Alt+Q',
   muted: true,
   liveUrl: 'https://tv.cctv.com/live/cctv5/',

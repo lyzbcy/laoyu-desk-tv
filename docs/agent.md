@@ -9,6 +9,7 @@
 - acceptance-2026-10-13.md：0.3.7最终发行、Windows安装升级/故障恢复、软件中心及网页同步证据与限制。
 - tech.md：宿主、渲染与播放状态的边界。
 - player.md：声音/老板键/直播；改播放前读。
+- recommendation-card.md：信息流推荐卡片、离线封面、关闭与托盘入口，以及当前视觉回归证据。
 - privacy.md：无感保护、焦点、防捕获和自动自检；修改隐私开关/窗口显示前读。
 - platforms.md：窗口、多屏、Mac Command键、托盘及打包。
 - updater.md：每日检查、校验下载、安装/回滚及首次迁移。

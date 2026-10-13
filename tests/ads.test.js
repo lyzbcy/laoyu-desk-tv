@@ -1,19 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import ads from '../src/core/ads.js';
+import fs from 'node:fs';
 
 const { AD_TEMPLATES } = ads;
 
 describe('AD_TEMPLATES', () => {
-  it('至少有 5 套模板', () => {
-    expect(AD_TEMPLATES.length).toBeGreaterThanOrEqual(5);
+  it('封面是打包页面内的离线素材，无网络依赖', () => {
+    for (const ad of AD_TEMPLATES) {
+      expect(ad.cover).toMatch(/^assets\/[a-z-]+\.png$/);
+      expect(fs.existsSync(new URL('../src/renderer/' + ad.cover, import.meta.url))).toBe(true);
+    }
   });
 
   it('每套模板都有渲染所需字段', () => {
     for (const ad of AD_TEMPLATES) {
       expect(typeof ad.id).toBe('string');
       expect(typeof ad.title).toBe('string');
-      expect(typeof ad.button).toBe('string');
-      expect(typeof ad.bg).toBe('string');
+      expect(typeof ad.brand).toBe('string');
+      expect(typeof ad.category).toBe('string');
+      expect(typeof ad.subtitle).toBe('string');
     }
   });
 

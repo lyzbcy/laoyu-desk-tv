@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld('api', {
   mediaError: (name) => ipcRenderer.send('media-error', name),
   setFolder: (dir) => ipcRenderer.invoke('set-folder', dir),
   onBossKey: (cb) => ipcRenderer.on('toggle-boss-key', () => cb()),
-  fakeClose: () => ipcRenderer.send('fake-close'),
+  closeCard: () => ipcRenderer.send('close-card'),
   onPickFolderFromTray: (cb) => ipcRenderer.on('pick-folder-from-tray', () => cb()),
   onToggleLive: (cb) => ipcRenderer.on('toggle-live', (_e, on) => cb(on)),
   navigateLive: (url) => ipcRenderer.send('navigate-live', url),

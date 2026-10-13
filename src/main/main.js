@@ -22,19 +22,19 @@ else app.setPath('userData',path.join(app.getPath('appData'),'paid-to-watch'));
 const ownsInstance=smoke||app.requestSingleInstanceLock();
 if(!ownsInstance)app.quit();
 let mainWindow,tray,liveView,config,state,logger,updater,callbacks,privacy,feedback;
-let setupMode=false,savedBounds=null,liveLoaded=false,phase='idle',statusMessage='默认静音，可点击声音开关开启';
-const AD_H=70,TITLE_H=22,ADDR_H=32;
+let setupMode=false,savedBounds=null,liveLoaded=false,liveLoadFailed=false,phase='idle',statusMessage='默认静音，可点击声音开关开启';
+const {stageBounds: cardStageBounds,DEFAULT_CARD}=require('../core/cardLayout');
 const safeWindow=()=>mainWindow&&!mainWindow.isDestroyed();
 const record=(level,event,fields)=>logger?.log(level,event,fields);
 function controlState(){const message=['loading','error'].includes(phase)?statusMessage:(state.liveOn?'网页播放：'+(state.liveMuted?'静音':'声音已开启'):'本地视频：'+(state.localMuted?'静音':'声音已开启'));return {version:app.getVersion(),platform:process.platform,architecture:process.arch,player:viewState(state),hotkey:displayAccelerator(config.hotkey),phase,message,updater:updater?.snapshot(),privacy:privacy?.snapshot(),engagement:{invite:shouldInvite(config.engagement)}};}
 function updateView(){
-  if(liveView){const s=viewState(state);liveView.webContents.setAudioMuted(s.effectiveLiveMuted);liveView.setBounds(s.liveVisible?stageBounds():{x:0,y:0,width:0,height:0});}
+  if(liveView){const s=viewState(state);liveView.webContents.setAudioMuted(s.effectiveLiveMuted||phase==='error');liveView.setBounds(s.liveVisible&&phase!=='error'?stageBounds():{x:0,y:0,width:0,height:0});}
   if(safeWindow())mainWindow.webContents.send('player-state',controlState());
-  if(tray)refreshTray(tray,callbacks,{...viewState(state),setupMode,favoriteSites:config.favoriteSites,version:app.getVersion()});
+  if(tray)refreshTray(tray,callbacks,{...viewState(state),setupMode,favoriteSites:config.favoriteSites,version:app.getVersion(),updateAvailable:updater?.snapshot().available});
   sendControls(controlState());
 }
 function dispatch(action){state=transition(state,action);updateView();}
-function stageBounds(){const {width,height}=mainWindow.getContentBounds();const addr=setupMode?ADDR_H:0;return {x:0,y:AD_H+addr,width,height:Math.max(0,height-2*AD_H-TITLE_H-addr)};}
+function stageBounds(){const {width,height}=mainWindow.getContentBounds();return cardStageBounds(width,height,setupMode);}
 function setPreference(action,key,value){
   const next={...config,[key]:value};
   if(!saveConfig(next)){statusMessage='设置保存失败，请重试';record('error','config.save-failed');updateView();return false;}
@@ -63,7 +63,7 @@ ipcMain.handle('set-folder',(_e,dir)=>{
   if(typeof dir!=='string'||!fs.statSync(dir).isDirectory())throw Error('请选择有效的视频文件夹');
   const next={...config,videoFolder:dir};if(!saveConfig(next))throw Error('视频目录保存失败');config=next;dispatch({type:'live',value:false});record('info','player.folder-selected');return true;
 });
-ipcMain.on('fake-close',()=>{if(!safeWindow())return;mainWindow.hide();setTimeout(()=>{if(safeWindow())mainWindow.show();},150);});
+ipcMain.on('close-card',()=>app.quit());
 ipcMain.on('video-ended',()=>dispatch({type:'ended'}));
 ipcMain.on('media-error',(_e,name)=>{phase='error';statusMessage='视频播放失败，可到“遇到问题反馈”查看诊断';record('warn','player.media-error',{code:/^[A-Za-z_]{1,50}$/.test(name||'')?name:'Unknown'});updateView();});
 ipcMain.handle('set-hotkey',(_e,accel)=>{
@@ -115,11 +115,12 @@ if(ownsInstance)app.whenReady().then(async()=>{
   liveView=new BrowserView({webPreferences:{contextIsolation:true,sandbox:true,partition:smoke?'smoke-live':'persist:live'}});
   liveView.webContents.setAudioMuted(true);mainWindow.addBrowserView(liveView);liveView.setBounds({x:0,y:0,width:0,height:0});
   liveView.webContents.on('enter-html-full-screen',updateView);liveView.webContents.on('leave-html-full-screen',updateView);
-  liveView.webContents.on('did-start-loading',()=>{phase='loading';statusMessage='正在加载网页…';updateView();});
-  liveView.webContents.on('did-finish-load',()=>{phase='ready';statusMessage='网页已就绪';liveView.webContents.setZoomFactor(setupMode?1:0.6);record('info','live.ready');updateView();});
-  liveView.webContents.on('did-fail-load',(_e,code)=>{if(code===-3)return;phase='error';statusMessage='网页加载失败，可重试或更换网址';record('warn','live.failed',{code});updateView();});
+  liveView.webContents.on('did-start-loading',()=>{liveLoadFailed=false;phase='loading';statusMessage='正在加载网页…';updateView();});
+  liveView.webContents.on('did-finish-load',()=>{if(liveLoadFailed)return;phase='ready';statusMessage='网页已就绪';liveView.webContents.setZoomFactor(setupMode?1:0.6);record('info','live.ready');updateView();});
+  liveView.webContents.on('did-fail-load',(_e,code,_description,_url,isMainFrame)=>{if(code===-3||isMainFrame===false)return;liveLoadFailed=true;phase='error';statusMessage='网页加载失败，可重试或更换网址';record('warn','live.failed',{code});updateView();});
   if(!registerHotkey(config.hotkey)){statusMessage='老板键注册失败，请到设置换一个组合';record('warn','hotkey.start-failed');}
   callbacks={
+    onResetCardSize:()=>{if(setupMode)return;const bounds=mainWindow.getBounds();mainWindow.setBounds(currentBounds({...bounds,...DEFAULT_CARD,y:bounds.y+bounds.height-DEFAULT_CARD.height}));},
     onPickFolder:()=>mainWindow.webContents.send('pick-folder-from-tray'),onToggleShow:()=>mainWindow.isVisible()?mainWindow.hide():mainWindow.show(),onSetHotkey:()=>openHotkeyWindow(),onOpenControls:openPanel,onOpenFeedback:()=>openPanel(true),
     onToggleLocalSound:()=>setPreference({type:'local-sound',value:state.localMuted},'muted',!state.localMuted),onToggleLiveSound:()=>setPreference({type:'live-sound',value:state.liveMuted},'liveMuted',!state.liveMuted),
     onToggleLive:()=>{if(!state.liveOn&&!liveLoaded)goToUrl(config.liveUrl);else dispatch({type:'live',value:!state.liveOn});},

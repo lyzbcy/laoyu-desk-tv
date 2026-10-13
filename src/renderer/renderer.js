@@ -1,31 +1,10 @@
 // src/renderer/renderer.js
 const { AD_TEMPLATES } = window.api.ads();
-const { nextIndex } = window.api.rotator;
-
-let topIdx = 0;
-let bottomIdx = Math.floor(AD_TEMPLATES.length / 2);
-
-function renderBanner(el, ad) {
-  el.style.background = ad.bg;
-  el.innerHTML =
-    `<div class="ad-title">${ad.title}</div>` +
-    `<div class="ad-sub">${ad.subtitle}</div>` +
-    `<div class="ad-btn">${ad.button}</div>`;
-}
-
-function paintAds() {
-  renderBanner(document.getElementById('ad-top'), AD_TEMPLATES[topIdx]);
-  renderBanner(document.getElementById('ad-bottom'), AD_TEMPLATES[bottomIdx]);
-}
-
-function rotateAds() {
-  topIdx = nextIndex(topIdx, AD_TEMPLATES.length);
-  bottomIdx = nextIndex(bottomIdx, AD_TEMPLATES.length);
-  paintAds();
-}
-
-paintAds();
-setInterval(rotateAds, 6000); // 每 6s 轮播一次,模拟真广告刷新
+const recommendation = AD_TEMPLATES[0];
+for (const [id, value] of Object.entries({ 'ad-brand': recommendation.brand,
+  'ad-category': recommendation.category, 'ad-title': recommendation.title,
+  'ad-subtitle': recommendation.subtitle })) document.getElementById(id).textContent = value;
+document.querySelectorAll('.cover-image').forEach(img => { img.src = recommendation.cover; });
 
 const videoEl = document.getElementById('video');
 const emptyEl = document.getElementById('video-empty');
@@ -42,8 +21,12 @@ async function loadFolder() {
 }
 
 async function openFolder(dir) {
-  const revision=++folderRevision;let scanned;try{scanned=await window.api.scanVideos(dir);}catch{if(revision===folderRevision)emptyEl.textContent='视频目录读取失败，请重新选择或检查访问权限';return;}if(revision!==folderRevision)return;videos=scanned;emptyEl.textContent='点击托盘图标选择视频文件夹';
-  emptyEl.style.display = videos.length ? 'none' : 'flex';
+  const revision=++folderRevision;let scanned;
+  try { scanned=await window.api.scanVideos(dir); }
+  catch { if(revision===folderRevision && !videoEl.src) emptyEl.hidden=false; return; }
+  if(revision!==folderRevision)return;videos=scanned;
+  emptyEl.hidden = videos.length > 0;
+  if (!videos.length) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); videoEl.classList.remove('playing'); }
   if (videos.length) play(videos[0], 0);
 }
 
@@ -60,42 +43,29 @@ function playNext() {
   play(videos[(currentIndex + 1) % videos.length], (currentIndex + 1) % videos.length);
 }
 
-// 临时:双击视频区触发选择文件夹(Task 10 改由托盘菜单触发)
+// Also keep the discreet double-click shortcut; normal controls are in the tray.
 document.getElementById('stage').addEventListener('dblclick', loadFolder);
 
 // 暴露给托盘任务复用
 window.__loadFolder = loadFolder;
 
-const { randomOtherIndex } = window.api.rotator;
 const overlay = document.getElementById('boss-overlay');
 let bossOn = false;
 let liveOn = false;
 
-function renderBossAd() {
-  const ad = AD_TEMPLATES[randomOtherIndex(topIdx, AD_TEMPLATES.length)];
-  overlay.style.background = ad.bg;
-  overlay.innerHTML =
-    `<div class="b-title">${ad.title}</div>` +
-    `<div class="ad-sub">${ad.subtitle}</div>` +
-    `<div class="b-btn">${ad.button}</div>`;
-}
-
 function showAd() {
   bossOn = true;
-  renderBossAd();
   overlay.hidden = false;
   videoEl.pause();
 }
 
 function applyState(payload) {
-  const update=payload.updater||{},settings=document.getElementById('open-controls');settings.textContent=update.available?'设置·新版':'设置';settings.title=update.available?(update.cached?'缓存中的新版，更新前会重新核实':'发现正式新版')+' '+update.version:'设置与遇到问题反馈';
   const state=payload.player,wasBoss=bossOn,wasLive=liveOn;
   bossOn=state.bossOn;liveOn=state.liveOn;videoEl.muted=state.effectiveLocalMuted;
-  document.getElementById('sound-toggle').textContent=(liveOn?'直播':'本地')+'：'+((liveOn?state.liveMuted:state.localMuted)?'静音':'开声');
-  document.getElementById('play-status').textContent=payload.phase==='loading'||payload.phase==='error'?payload.message:bossOn?'广告模式 · 已静音':((liveOn?state.liveMuted:state.localMuted)?'点击声音可开启':'声音已开启');
+  emptyEl.hidden = payload.phase !== 'error' && (liveOn || !!videos.length);
   if (!bossOn) {
     overlay.hidden = true;
-    if (liveOn) {videoEl.pause();videoEl.classList.remove('playing');emptyEl.style.display='none';return;}
+    if (liveOn) {videoEl.pause();videoEl.classList.remove('playing');return;}
     if (videoEl.ended) {
       if(wasBoss)playNext();
     } else if(videoEl.src && (wasBoss || wasLive)) {
@@ -106,17 +76,14 @@ function applyState(payload) {
   }
 }
 window.api.onPlayerState(applyState);
-document.getElementById('sound-toggle').addEventListener('click',()=>window.api.toggleSound().then(applyState));
-document.getElementById('open-controls').addEventListener('click',()=>window.api.openControls());
-document.getElementById('open-feedback').addEventListener('click',()=>window.api.openFeedback());
 
 // 视频自然播完 → 自动切到全屏假广告(和按老板键效果一样)
 videoEl.addEventListener('ended', () => {
   if (!bossOn && !liveOn) window.api.videoEnded();
 });
 
-document.getElementById('fake-close').addEventListener('click', () => {
-  window.api.fakeClose();
+document.getElementById('close-card').addEventListener('click', () => {
+  window.api.closeCard();
 });
 
 window.api.onPickFolderFromTray(() => window.__loadFolder());
