@@ -41,12 +41,18 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
   await panel.webContents.executeJavaScript("document.querySelector('#note').value='隔离回归：本地测试媒体出现问题';document.querySelector('#note').dispatchEvent(new Event('input'));document.querySelector('#previewFeedback').click();true");
   let preview;for(let i=0;i<100;i++){preview=await panel.webContents.executeJavaScript("!document.querySelector('#feedbackPreview').hidden && document.querySelector('#feedbackBody').textContent.includes('Laoyu Desk TV')");if(preview)break;await sleep(50);}assert(preview,'actual feedback preview IPC failed');
   assert.equal(await panel.webContents.executeJavaScript("document.querySelector('#feedback').hidden"),false);
+  const retiredToken=await panel.webContents.executeJavaScript('draft.token');
+  await panel.webContents.executeJavaScript("document.querySelector('#note').value='隔离回归：修改后的建议';document.querySelector('#note').dispatchEvent(new Event('input'));true");await sleep(100);
+  assert(await panel.webContents.executeJavaScript("document.querySelector('#feedback').hidden && document.querySelector('#feedbackBody').textContent==='' && document.querySelector('#feedbackLogs').textContent===''") ,'edited preview must clear its old DOM');
+  assert(await panel.webContents.executeJavaScript("(async()=>{try{await window.controls.feedback("+JSON.stringify(retiredToken)+");return false}catch{return true}})()"),'actual IPC must reject retired feedback token');
+  await panel.webContents.executeJavaScript("document.querySelector('#previewFeedback').click();true");for(let i=0;i<100;i++){if(await panel.webContents.executeJavaScript("!document.querySelector('#feedback').hidden"))break;await sleep(50);}
   await panel.webContents.executeJavaScript("document.querySelector('#feedback').click();true");for(let i=0;i<100;i++){if(await panel.webContents.executeJavaScript("document.querySelector('#message').textContent.includes('ZIP 已保存')"))break;await sleep(50);}
   const downloads=path.join(app.getPath('userData'),'test-downloads');assert.equal(fs.readdirSync(downloads).filter(name=>name.endsWith('.zip')).length,1,'default diagnostic archive must be saved only to isolated test directory');
   await panel.webContents.executeJavaScript("document.querySelector('#includeLogs').click();document.querySelector('#previewFeedback').click();true");for(let i=0;i<100;i++){if(await panel.webContents.executeJavaScript("!document.querySelector('#feedbackPreview').hidden && document.querySelector('#feedbackAttachment').textContent.includes('不附加')"))break;await sleep(50);}
   assert(await panel.webContents.executeJavaScript("document.querySelector('#feedbackAttachment').textContent.includes('不附加')"));
   await panel.webContents.executeJavaScript("document.querySelector('#feedback').click();true");await sleep(150);assert.equal(fs.readdirSync(downloads).filter(name=>name.endsWith('.zip')).length,1);
   await panel.webContents.executeJavaScript("document.querySelector('#dismissInvite').click();true");await sleep(150);assert(JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),'config.json'),'utf8')).engagement.lastDismissDay,'dismissal must persist to real isolated configuration');
+  assert(JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),'config.json'),'utf8')).engagement.lastDismissAt,'full fifteen-day cooldown timestamp must persist');
   await sleep(300);assert.equal(panel.isVisible(),false,'isolated UI test must keep its panel hidden');
   fs.writeFileSync(path.join(output,'controls.png'),(await panel.webContents.capturePage()).toPNG());panel.close();
   fs.writeFileSync(path.join(output,'player.png'),(await mainWindow.webContents.capturePage()).toPNG());
