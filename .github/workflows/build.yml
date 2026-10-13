@@ -5,6 +5,20 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
+      installed_update:
+        description: Verify actual installed Windows update in temporary VM
+        type: boolean
+        default: false
+      old_version:
+        description: Exact immutable installed baseline
+        default: '0.3.3'
+      new_version:
+        description: Exact immutable update target
+        default: '0.3.5'
+      metadata_fixture:
+        description: Explicit candidate metadata fixture, never formal online discovery
+        type: boolean
+        default: false
       upload_mac_draft:
         description: Upload verified Mac packages to an existing draft release
         type: boolean
@@ -13,6 +27,7 @@ permissions:
   contents: write
 jobs:
   desktop:
+    if: ${{ !inputs.installed_update }}
     strategy:
       fail-fast: false
       matrix:
@@ -73,3 +88,24 @@ jobs:
         with:
           name: ui-evidence-${{ runner.os }}
           path: verification/ui*/*
+  production-update:
+    if: ${{ inputs.installed_update }}
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.21.0'
+      - name: Actual installed update, native window and desktop reopen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DESK_OLD_VERSION: ${{ inputs.old_version }}
+          DESK_NEW_VERSION: ${{ inputs.new_version }}
+          DESK_METADATA_FIXTURE: ${{ inputs.metadata_fixture }}
+        run: node scripts/ci-installed-update.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: installed-update-${{ inputs.old_version }}-to-${{ inputs.new_version }}
+          path: verification/installed-*/**
