@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('controls',{
  onState:callback=>ipcRenderer.on('control-state',(_event,state)=>callback(state)),
  privacy:(key,value)=>ipcRenderer.invoke('set-privacy',key,value),selfCheck:()=>ipcRenderer.invoke('privacy-check'),
  dismissInvite:()=>ipcRenderer.invoke('dismiss-feedback-invite'),project:()=>ipcRenderer.invoke('open-project'),
+ authorHome:()=>ipcRenderer.invoke('open-author-home'),
 });

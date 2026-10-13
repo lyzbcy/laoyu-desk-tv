@@ -12,7 +12,9 @@
 - updater.md：每日检查、校验下载、安装/回滚及首次迁移。
 - installer.md：Windows现代安装器、非系统盘推荐、用户选项和静默更新兼容。
 - feedback.md：可见反馈入口、脱敏日志、用户主动分享。
+- author.md：软件内作者页面、固定主页与离线QR素材；修改推广入口时读。
 - testing.md：单测、隔离网页/应用回归、构建与真实验收。
 - launcher.md：产品ID、主程序、发布资产与启动器登记。
 
 上游设计保留在根 DESIGN.md，历史计划在 docs/plans/。
+历史plans/2026-06-09-mvp.md仅用于追溯上游MVP，不能据其旧版本判断当前验收状态。

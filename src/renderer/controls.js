@@ -23,6 +23,7 @@ $('previewFeedback').onclick=async()=>{if(busyFeedback)return;const revision=dra
 $('feedback').onclick=async()=>{if(busyFeedback||!draft)return;feedbackBusy(true);try{const result=await action(()=>window.controls.feedback(draft.token));if(result){$('message').textContent=(result.needsPaste?'长备注已复制，请粘贴并确认提交。':'反馈页已填好，请确认后提交。')+(result.attachment?'诊断 ZIP 已保存到下载目录，可拖入 GitHub 附件。':'');invalidateDraft();}}finally{feedbackBusy(false);}};
 window.controls.onState(render);window.controls.state().then(render).catch(e=>$('message').textContent=e.message);
 $('closeWindow').onclick=()=>window.close();
+$('aboutAuthor').onclick=()=>location.assign('about.html');
 for(const id of ['privacyEnabled','autoPrivacyCheck'])$(id).onchange=async()=>{const result=await action(()=>window.controls.privacy(id,$(id).checked));if(result)render(result);else if(current)render(current);};
 $('privacyCheck').onclick=async()=>{const result=await action(()=>window.controls.selfCheck());if(result)render(result);};
 $('dismissInvite').onclick=async()=>{const result=await action(()=>window.controls.dismissInvite());if(result)render(result);};

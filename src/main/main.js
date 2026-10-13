@@ -86,6 +86,7 @@ ipcMain.handle('cancel-feedback',(event,token)=>feedback.cancel(token,event.send
 ipcMain.handle('feedback',(event,token)=>feedback.submit(token,event.sender.id));
 ipcMain.handle('dismiss-feedback-invite',()=>{const dismissedAt=new Date(),next={...config,engagement:{...config.engagement,lastDismissDay:day(dismissedAt),lastDismissAt:dismissedAt.toISOString()}};if(!saveConfig(next))throw Error('提醒偏好保存失败，请重试');config=next;updateView();return controlState();});
 ipcMain.handle('open-project',()=>smoke?true:shell.openExternal('https://github.com/lyzbcy/laoyu-desk-tv'));
+ipcMain.handle('open-author-home',()=>smoke?true:shell.openExternal('https://lyzbcy.github.io/'));
 function goToUrl(value){
   if(typeof value!=='string'||value.length>4096)return;
   let url;try{url=new URL(/^https?:\/\//i.test(value)?value:'https://'+value);if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw Error('invalid');}
