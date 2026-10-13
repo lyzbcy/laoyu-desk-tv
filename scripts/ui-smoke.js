@@ -5,7 +5,7 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
  const evaluate=expression=>mainWindow.webContents.executeJavaScript(expression,true);
  const waitFor=async(expression)=>{for(let i=0;i<100;i++){try{if(await evaluate(expression))return;}catch{}await sleep(50);}throw Error('UI not ready: '+expression);};
  const output=process.env.PAID_SMOKE_OUTPUT||process.cwd();fs.mkdirSync(output,{recursive:true});
- let server,closeListener;
+ let server,closeListener,completed=false;
  try{
   await waitFor('typeof window.api!=="undefined" && document.querySelector("#ad-brand").textContent && [...document.querySelectorAll(".cover-image")].every(i=>i.complete&&i.naturalWidth>0)');
   const noDisclosure=async()=>assert(await evaluate('!/(本地|静音|开声|设置|反馈|文件夹|默认|捞鱼)/.test(document.body.innerText) && !document.querySelector("#open-controls,#open-feedback,#sound-toggle,#play-status")'),'card must not disclose software controls or diagnostics');
@@ -36,7 +36,7 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
   dispatch({type:'toggle-boss'});assert.equal(liveView.webContents.isAudioMuted(),true);assert.equal(liveView.getBounds().height,0);
   dispatch({type:'toggle-boss'});assert.equal(liveView.webContents.isAudioMuted(),false);assert(liveView.getBounds().height>0);
   callbacks.onSelectFavorite('http://127.0.0.1:'+server.address().port+'/fail');for(let i=0;i<100&&getState().phase!=='error';i++)await sleep(50);assert.equal(getState().phase,'error');assert.equal(liveView.webContents.isAudioMuted(),true);assert.equal(liveView.getBounds().height,0);await waitFor('!document.querySelector("#video-empty").hidden');await noDisclosure();
-  callbacks.onSelectFavorite('http://127.0.0.1:'+server.address().port);for(let i=0;i<100&&getState().phase!=='ready';i++)await sleep(50);assert.equal(getState().phase,'ready');assert.equal(liveView.webContents.isAudioMuted(),false);
+  await callbacks.onSelectFavorite('http://127.0.0.1:'+server.address().port+'/retry');assert.equal(getState().phase,'ready');assert.equal(liveView.webContents.isAudioMuted(),false);
   callbacks.onToggleLive();assert.equal(liveView.webContents.isAudioMuted(),true);
   callbacks.onOpenFeedback();await sleep(100);const panel=callbacks.onOpenControls();
   let panelReady=false;
@@ -83,8 +83,9 @@ async function run({app,mainWindow,liveView,callbacks,dispatch,getState}){
   await noDisclosure();assert.equal(mainWindow.isVisible(),false);
   const report={version:app.getVersion(),platform:process.platform,arch:process.arch,status:'passed',bounds:mainWindow.getBounds(),checks:['default mute','local tray toggle and real silent local media decoding','boss forced mute and preference restore','offline coherent cover without player controls in empty/playing/boss/error states','real local BrowserView fixture','native webpage alignment including setup and fractional DPI','live sound toggle','failed webpage hides and mutes then restores preference on successful retry','hidden live mute','boss prevents live view resurfacing','feedback and diagnostic controls','internal author page, offline QR images and return navigation','tray first-level feedback entry, including from author page'],scope:'isolated userData; all windows hidden; no global keys, user media, external web or outgoing feedback; actual close reported separately in close-card.json'};
   fs.writeFileSync(path.join(output,'ui-smoke.json'),JSON.stringify(report,null,2));console.log('SMOKE_OK '+JSON.stringify(report));
-  closeListener=()=>{fs.writeFileSync(path.join(output,'close-card.json'),JSON.stringify({status:'passed',action:'actual renderer close button triggered app.quit; all playback processes exit'}));console.log('CARD_CLOSE_OK');};app.once('before-quit',closeListener);
+  server.closeAllConnections();server.close();server=null;
+  closeListener=()=>{completed=true;fs.writeFileSync(path.join(output,'close-card.json'),JSON.stringify({status:'passed',action:'actual renderer close button triggered app.quit; parent process must return zero'}));console.log('CARD_CLOSE_OK');};app.once('before-quit',closeListener);
   await evaluate('document.querySelector("#close-card").click();true');await sleep(300);throw Error('Close button did not quit the application');
- }finally{if(closeListener)app.removeListener('before-quit',closeListener);clearTimeout(watchdog);server?.close();app.quit();}
+ }finally{if(closeListener)app.removeListener('before-quit',closeListener);clearTimeout(watchdog);server?.closeAllConnections();server?.close();if(!completed)app.exit(2);else app.quit();}
 }
 module.exports={run};

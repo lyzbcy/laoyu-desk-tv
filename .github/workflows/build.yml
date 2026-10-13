@@ -60,6 +60,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - name: Isolated real Electron UI regression
+        timeout-minutes: 3
         shell: bash
         env:
           PAID_SMOKE_OUTPUT: verification/ui
@@ -71,6 +72,7 @@ jobs:
         if: runner.os == 'macOS'
         run: npm run dist:mac
       - name: Packaged native Mac UI regression
+        timeout-minutes: 3
         if: runner.os == 'macOS'
         shell: bash
         env:

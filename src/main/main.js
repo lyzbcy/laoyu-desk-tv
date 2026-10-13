@@ -94,7 +94,7 @@ function goToUrl(value){
   catch{statusMessage='请输入有效的网页地址';phase='error';updateView();return;}
   config={...config,liveUrl:url.toString()};saveConfig(config);
   dispatch({type:'live',value:true});liveLoaded=true;phase='loading';statusMessage='正在加载网页…';updateView();
-  liveView.webContents.loadURL(url.toString()).catch(()=>{});
+  return liveView.webContents.loadURL(url.toString()).catch(()=>{});
 }
 ipcMain.on('navigate-live',(_event,url)=>goToUrl(url));
 app.on('second-instance',()=>{if(safeWindow()){mainWindow.show();mainWindow.focus();}});
