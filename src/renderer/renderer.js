@@ -108,6 +108,7 @@ function applyState(payload) {
 window.api.onPlayerState(applyState);
 document.getElementById('sound-toggle').addEventListener('click',()=>window.api.toggleSound().then(applyState));
 document.getElementById('open-controls').addEventListener('click',()=>window.api.openControls());
+document.getElementById('open-feedback').addEventListener('click',()=>window.api.openFeedback());
 
 // 视频自然播完 → 自动切到全屏假广告(和按老板键效果一样)
 videoEl.addEventListener('ended', () => {

@@ -43,7 +43,7 @@ function setPreference(action,key,value){
 function toggleSound(){return state.liveOn?setPreference({type:'live-sound',value:state.liveMuted},'liveMuted',!state.liveMuted):setPreference({type:'local-sound',value:state.localMuted},'muted',!state.localMuted);}
 function toggleBoss(){if(config.privacyEnabled!==false&&privacy?.snapshot().level==='fail'&&state.bossOn){statusMessage='无感自检未通过，请先在设置中重试或关闭保护';phase='error';updateView();return;}dispatch({type:'toggle-boss'});record('info','player.boss',{ok:state.bossOn});}
 function registerHotkey(accel){return smoke?true:globalShortcut.register(accel,()=>{if(safeWindow())toggleBoss();});}
-function openPanel(){return openControls(controlState,{show:!smoke});}
+function openPanel(feedback=false){return openControls(controlState,{show:!smoke,feedback});}
 ipcMain.handle('get-config',()=>config);
 ipcMain.handle('get-player-state',()=>controlState());
 ipcMain.handle('get-control-state',()=>controlState());
@@ -51,6 +51,7 @@ ipcMain.handle('set-privacy',(_event,key,value)=>{if(!['privacyEnabled','autoPri
 ipcMain.handle('privacy-check',async()=>{await privacy.run();return controlState();});
 ipcMain.handle('toggle-sound',()=>{toggleSound();return controlState();});
 ipcMain.handle('open-controls',()=>{openPanel();return true;});
+ipcMain.handle('open-feedback',()=>{openPanel(true);return true;});
 ipcMain.handle('set-sound',(_e,source,on)=>{
   if(typeof on!=='boolean'||!['local','live'].includes(source))throw Error('声音参数无效');
   setPreference({type:source==='live'?'live-sound':'local-sound',value:on},source==='live'?'liveMuted':'muted',!on);return controlState();
@@ -119,7 +120,7 @@ if(ownsInstance)app.whenReady().then(async()=>{
   liveView.webContents.on('did-fail-load',(_e,code)=>{if(code===-3)return;phase='error';statusMessage='网页加载失败，可重试或更换网址';record('warn','live.failed',{code});updateView();});
   if(!registerHotkey(config.hotkey)){statusMessage='老板键注册失败，请到设置换一个组合';record('warn','hotkey.start-failed');}
   callbacks={
-    onPickFolder:()=>mainWindow.webContents.send('pick-folder-from-tray'),onToggleShow:()=>mainWindow.isVisible()?mainWindow.hide():mainWindow.show(),onSetHotkey:()=>openHotkeyWindow(),onOpenControls:openPanel,
+    onPickFolder:()=>mainWindow.webContents.send('pick-folder-from-tray'),onToggleShow:()=>mainWindow.isVisible()?mainWindow.hide():mainWindow.show(),onSetHotkey:()=>openHotkeyWindow(),onOpenControls:openPanel,onOpenFeedback:()=>openPanel(true),
     onToggleLocalSound:()=>setPreference({type:'local-sound',value:state.localMuted},'muted',!state.localMuted),onToggleLiveSound:()=>setPreference({type:'live-sound',value:state.liveMuted},'liveMuted',!state.liveMuted),
     onToggleLive:()=>{if(!state.liveOn&&!liveLoaded)goToUrl(config.liveUrl);else dispatch({type:'live',value:!state.liveOn});},
     onToggleSetupMode:()=>{setupMode=!setupMode;if(setupMode){savedBounds=mainWindow.getBounds();presentWindow(mainWindow,true,config.privacyEnabled!==false);mainWindow.setBounds(currentBounds(savedBounds,true));}else{presentWindow(mainWindow,false,config.privacyEnabled!==false);if(savedBounds)mainWindow.setBounds(currentBounds(savedBounds));}privacy.apply(mainWindow);mainWindow.webContents.send('setup-mode',setupMode);liveView.webContents.setZoomFactor(setupMode?1:0.6);updateView();},onSelectFavorite:goToUrl,

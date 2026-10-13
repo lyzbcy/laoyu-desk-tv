@@ -1,6 +1,8 @@
 # 开发进度
 
-现状：Laoyu Desk TV 0.3.7已公开发行；负责人：捞鱼；最后更新：2026-10-13。
+现状：Laoyu Desk TV 0.3.7已公开发行。
+负责人：捞鱼。
+最后更新：2026-10-13。
 
 中文名「捞鱼桌脚看电视」，英文名「Laoyu Desk TV」。主仓库lyzbcy/laoyu-desk-tv；旧lyzbcy/paid-to-watch只保留0.3.2固化更新器的兼容发行通道。上游出处a295371927-sys/paid-to-watch及MIT许可保留。
 

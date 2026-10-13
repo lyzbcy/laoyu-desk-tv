@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('api', {
   getPlayerState: () => ipcRenderer.invoke('get-player-state'),
   toggleSound: () => ipcRenderer.invoke('toggle-sound'),
   openControls: () => ipcRenderer.invoke('open-controls'),
+  openFeedback: () => ipcRenderer.invoke('open-feedback'),
   onPlayerState: (cb) => ipcRenderer.on('player-state', (_event,state) => cb(state)),
   videoEnded: () => ipcRenderer.send('video-ended'),
   mediaError: (name) => ipcRenderer.send('media-error', name),

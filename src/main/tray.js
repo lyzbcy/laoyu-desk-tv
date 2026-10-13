@@ -28,7 +28,8 @@ function buildMenu(callbacks, state) {
     },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
-    { label: '设置 / 遇到问题反馈', click: () => callbacks.onOpenControls() },
+    { label: '设置', click: () => callbacks.onOpenControls() },
+    { label: '遇到问题反馈', click: () => callbacks.onOpenFeedback() },
     { label: `捞鱼桌脚看电视 ${state.version || ''}`, enabled: false },
   ]);
 }
