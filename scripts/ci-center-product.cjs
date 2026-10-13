@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 if(process.env.GITHUB_ACTIONS!=='true'||process.env.RUNNER_OS!=='Windows'||process.platform!=='win32')throw Error('Temporary hosted Windows only');
-const version=process.env.DESK_NEW_VERSION||'0.3.7';assert.match(version,/^\d+\.\d+\.\d+$/);
+const version=process.env.DESK_NEW_VERSION||'0.3.9';assert.match(version,/^\d+\.\d+\.\d+$/);
 const out=path.resolve('verification/center-product'),root=fs.mkdtempSync(path.join(process.env.RUNNER_TEMP,'desk-center-')),centerRoot=path.join(root,'center');fs.mkdirSync(out,{recursive:true});let stage='download',connection;
 const env={...process.env};for(const key of ['GH_TOKEN','GITHUB_TOKEN','ACTIONS_RUNTIME_TOKEN','ELECTRON_RUN_AS_NODE'])delete env[key];
 const sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),sleep=ms=>new Promise(r=>setTimeout(r,ms)),quote=s=>"'"+s.replaceAll("'","''")+"'";
