@@ -37,7 +37,7 @@ new="$stage/带薪看片.app"
 new_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$new/Contents/Info.plist")
 new_version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$new/Contents/Info.plist")
 [ "$new_id" = 'com.laoyu.paidtowatch' ] && [ "$new_version" = "$version" ] || fail
-printf '{"token":"%s","status":"ready"}' "$token" > "$job/ready.json"
+printf '{"token":"%s","status":"ready","version":"%s","pid":%s}' "$token" "$version" "$$" > "$job/ready.json"
 count=0
 while [ ! -f "$job/commit.json" ]; do
  [ ! -f "$job/abort.json" ] || fail

@@ -5,6 +5,12 @@ description: 开发、修复、打包和维护捞鱼桌脚看电视（原带薪�
 
 # 捞鱼桌脚看电视开发入口
 
+## 2026-10-13规范修复接续
+
+当前开发包0.3.4，旧正式版0.3.3资产保持不可变。本轮对照共享/tools/软件开发补齐日志二次过滤/诊断ZIP、预填GitHub反馈及撤销旧预览、同日重启的缓存新版披露、非打扰评价邀请与15×24h冷却、配置恢复副本及异步目录阶段。Windows助手与重启确认核对登记/图标/Unicode快捷方式，失败恢复原登记与链接；ready必须匹配真实助手PID、token和版本。用户已明确选GitHub通道，不在公开客户端嵌入机器人密钥，也不发送真实验收消息。
+
+先读docs/standards-audit.md和各模块；当前66项核心测试通过，隐藏真实Electron与独立Kimi夹具观察范围分别留证。正式包/CI/真实安装版更新尚在本轮验收中，不能提前宣称已发布。后续发行以最终版本与verification/standards-2026-10-13/记录为准。AppID、paid-to-watch设置目录、旧名称兼容入口、默认静音和无感开关保持其红线；Mac真人限制继续明确。
+
 ## 项目与技术
 
 伪装成广告小窗的本地视频/网页播放器。基于 a295371927-sys/paid-to-watch 二次开发，Electron 44.7、原生 JavaScript/CSS、Koffi、electron-builder 26、Vitest 5；Windows x64、macOS x64/arm64。0.3.3更名捞鱼桌脚看电视，技术产品ID和设置目录仍paid-to-watch。

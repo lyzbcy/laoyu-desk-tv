@@ -20,4 +20,5 @@ function scanFolder(dir, readdir = fs.readdirSync) {
   }));
 }
 
-module.exports = { isVideoFile, filterVideos, scanFolder, VIDEO_EXTS };
+async function scanFolderAsync(dir){const entries=await fs.promises.readdir(dir,{withFileTypes:true}),videos=[];for(const entry of entries){if(!isVideoFile(entry.name))continue;let file=entry.isFile();if(entry.isSymbolicLink())try{file=(await fs.promises.stat(path.join(dir,entry.name))).isFile();}catch{}if(file)videos.push({name:entry.name,path:path.join(dir,entry.name)});}return videos;}
+module.exports = { isVideoFile, filterVideos, scanFolder,scanFolderAsync, VIDEO_EXTS };

@@ -4,11 +4,15 @@ const {pathToFileURL}=require('node:url');
 const {createMainWindow,currentBounds,presentWindow}=require('./window');
 const {createTray,refreshTray}=require('./tray');
 const {openHotkeyWindow}=require('./hotkeyWindow');
-const {loadConfig,saveConfig}=require('./store');
-const {scanFolder}=require('../core/videoScanner');
+const {loadConfig,saveConfig,configWarning}=require('./store');
+const {scanFolderAsync}=require('../core/videoScanner');
 const {initialState,transition,viewState}=require('../core/playerState');
 const {displayAccelerator}=require('../core/hotkey');
 const {createLogger}=require('../core/logger');
+const {createDiagnosticArchive}=require('../core/diagnosticArchive');
+const {createFeedback}=require('./feedback');
+const {recordUse,shouldInvite}=require('../core/engagement');
+const {day}=require('../core/updateRelease');
 const {createUpdater,RELEASE_PAGE,confirmRestart}=require('./updater');
 const {openControls,sendControls}=require('./controls');
 const {createPrivacy}=require('./privacy');
@@ -17,12 +21,12 @@ if(smoke){app.disableHardwareAcceleration();const dir=fs.mkdtempSync(path.join(o
 else app.setPath('userData',path.join(app.getPath('appData'),'paid-to-watch'));
 const ownsInstance=smoke||app.requestSingleInstanceLock();
 if(!ownsInstance)app.quit();
-let mainWindow,tray,liveView,config,state,logger,updater,callbacks,privacy;
+let mainWindow,tray,liveView,config,state,logger,updater,callbacks,privacy,feedback;
 let setupMode=false,savedBounds=null,liveLoaded=false,phase='idle',statusMessage='默认静音，可点击声音开关开启';
 const AD_H=70,TITLE_H=22,ADDR_H=32;
 const safeWindow=()=>mainWindow&&!mainWindow.isDestroyed();
 const record=(level,event,fields)=>logger?.log(level,event,fields);
-function controlState(){const message=['loading','error'].includes(phase)?statusMessage:(state.liveOn?'网页播放：'+(state.liveMuted?'静音':'声音已开启'):'本地视频：'+(state.localMuted?'静音':'声音已开启'));return {version:app.getVersion(),platform:process.platform,architecture:process.arch,player:viewState(state),hotkey:displayAccelerator(config.hotkey),phase,message,updater:updater?.snapshot(),privacy:privacy?.snapshot()};}
+function controlState(){const message=['loading','error'].includes(phase)?statusMessage:(state.liveOn?'网页播放：'+(state.liveMuted?'静音':'声音已开启'):'本地视频：'+(state.localMuted?'静音':'声音已开启'));return {version:app.getVersion(),platform:process.platform,architecture:process.arch,player:viewState(state),hotkey:displayAccelerator(config.hotkey),phase,message,updater:updater?.snapshot(),privacy:privacy?.snapshot(),engagement:{invite:shouldInvite(config.engagement)}};}
 function updateView(){
   if(liveView){const s=viewState(state);liveView.webContents.setAudioMuted(s.effectiveLiveMuted);liveView.setBounds(s.liveVisible?stageBounds():{x:0,y:0,width:0,height:0});}
   if(safeWindow())mainWindow.webContents.send('player-state',controlState());
@@ -52,7 +56,8 @@ ipcMain.handle('set-sound',(_e,source,on)=>{
   setPreference({type:source==='live'?'live-sound':'local-sound',value:on},source==='live'?'liveMuted':'muted',!on);return controlState();
 });
 ipcMain.handle('pick-folder',async()=>{const r=await dialog.showOpenDialog(mainWindow,{properties:['openDirectory']});return r.canceled?null:r.filePaths[0];});
-ipcMain.handle('scan-videos',(_e,dir)=>typeof dir==='string'?scanFolder(dir).map(v=>({...v,url:pathToFileURL(v.path).href})):[]);
+let scanRevision=0;
+ipcMain.handle('scan-videos',async(_e,dir)=>{if(typeof dir!=='string')return [];const revision=++scanRevision;phase='loading';statusMessage='正在读取视频目录…';updateView();try{const videos=await scanFolderAsync(dir);if(revision===scanRevision){phase='ready';statusMessage='视频目录已读取';record('info','player.scan-complete',{count:videos.length});updateView();}return videos.map(v=>({...v,url:pathToFileURL(v.path).href}));}catch{if(revision===scanRevision){phase='error';statusMessage='视频目录读取失败，请重新选择文件夹或检查访问权限';record('warn','player.scan-failed');updateView();}throw Error('视频目录读取失败，请重新选择文件夹或检查访问权限');}});
 ipcMain.handle('set-folder',(_e,dir)=>{
   if(typeof dir!=='string'||!fs.statSync(dir).isDirectory())throw Error('请选择有效的视频文件夹');
   const next={...config,videoFolder:dir};if(!saveConfig(next))throw Error('视频目录保存失败');config=next;dispatch({type:'live',value:false});record('info','player.folder-selected');return true;
@@ -72,14 +77,15 @@ ipcMain.handle('check-update',()=>updater.check(true));
 ipcMain.handle('install-update',()=>updater.install());
 ipcMain.handle('open-release',()=>shell.openExternal(RELEASE_PAGE));
 ipcMain.handle('export-logs',async()=>{
-  const result=await dialog.showSaveDialog({title:'导出技术日志',defaultPath:'捞鱼桌脚看电视-诊断.txt',filters:[{name:'文本',extensions:['txt']}]});
-  if(result.canceled)return false;fs.writeFileSync(result.filePath,logger.summary(),'utf8');return true;
+  if(smoke)return false;
+  const result=await dialog.showSaveDialog({title:'导出诊断 ZIP',defaultPath:'Laoyu-Desk-TV-diagnostics.zip',filters:[{name:'诊断ZIP',extensions:['zip']}]});
+  if(result.canceled)return false;fs.writeFileSync(result.filePath,createDiagnosticArchive({version:app.getVersion(),platform:process.platform,architecture:process.arch,logs:logger.summary()}));return true;
 });
-ipcMain.handle('feedback',async(_event,payload)=>{
-  const note=String(payload?.note||'').slice(0,4000),category=String(payload?.category||'其他').slice(0,50);
-  const body=`软件：捞鱼桌脚看电视\n版本：${app.getVersion()}\n平台：${process.platform}/${process.arch}\n分类：${category}\n\n${note}\n`+(payload?.includeLogs?'\n技术日志（不含媒体路径、网址或登录信息）：\n'+logger.summary():'');
-  clipboard.writeText(body);await shell.openExternal('https://github.com/lyzbcy/laoyu-desk-tv/issues/new');return true;
-});
+ipcMain.handle('prepare-feedback',(event,payload)=>feedback.prepare(payload,event.sender.id));
+ipcMain.handle('cancel-feedback',(event,token)=>feedback.cancel(token,event.sender.id));
+ipcMain.handle('feedback',(event,token)=>feedback.submit(token,event.sender.id));
+ipcMain.handle('dismiss-feedback-invite',()=>{const dismissedAt=new Date(),next={...config,engagement:{...config.engagement,lastDismissDay:day(dismissedAt),lastDismissAt:dismissedAt.toISOString()}};if(!saveConfig(next))throw Error('提醒偏好保存失败，请重试');config=next;updateView();return controlState();});
+ipcMain.handle('open-project',()=>smoke?true:shell.openExternal('https://github.com/lyzbcy/laoyu-desk-tv'));
 function goToUrl(value){
   if(typeof value!=='string'||value.length>4096)return;
   let url;try{url=new URL(/^https?:\/\//i.test(value)?value:'https://'+value);if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw Error('invalid');}
@@ -93,7 +99,10 @@ app.on('second-instance',()=>{if(safeWindow()){mainWindow.show();mainWindow.focu
 app.on('activate',()=>{if(safeWindow())mainWindow.show();});
 if(ownsInstance)app.whenReady().then(async()=>{
   config=loadConfig();state=initialState(config);
+  if(configWarning()){phase='error';statusMessage=configWarning();}
   logger=createLogger(path.join(app.getPath('userData'),'logs'),{version:app.getVersion(),platform:process.platform});record('info','app.start');
+  const usage={...config,engagement:recordUse(config.engagement)};if(saveConfig(usage))config=usage;else record('warn','config.usage-save-failed');
+  feedback=createFeedback({version:app.getVersion(),platform:process.platform,architecture:process.arch,summary:()=>logger.summary(),saveArchive:async(name,bytes)=>{const folder=smoke?path.join(app.getPath('userData'),'test-downloads'):app.getPath('downloads');fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(path.join(folder,name),bytes,{flag:'wx'});},openExternal:smoke?async()=>{}:url=>shell.openExternal(url),copyText:smoke?()=>{}:text=>clipboard.writeText(text)});
   privacy=createPrivacy({app,config:()=>config,mainWindow:()=>mainWindow,hotkeyReady:()=>!smoke&&globalShortcut.isRegistered(config.hotkey),logger,smoke,notify:()=>{if(privacy?.snapshot().level==='fail'&&config.privacyEnabled!==false){state=transition(state,{type:'privacy-failure'});phase='error';statusMessage='无感自检未通过，已遮挡并静音。请到设置查看。';}else if(phase==='error'&&statusMessage.startsWith('无感自检')){phase='idle';}updateView();}});
   if(process.platform==='win32')app.setAppUserModelId('com.laoyu.paidtowatch');
   mainWindow=createMainWindow(config,{show:!smoke});privacy.apply(mainWindow);
@@ -114,7 +123,7 @@ if(ownsInstance)app.whenReady().then(async()=>{
     onToggleLive:()=>{if(!state.liveOn&&!liveLoaded)goToUrl(config.liveUrl);else dispatch({type:'live',value:!state.liveOn});},
     onToggleSetupMode:()=>{setupMode=!setupMode;if(setupMode){savedBounds=mainWindow.getBounds();presentWindow(mainWindow,true,config.privacyEnabled!==false);mainWindow.setBounds(currentBounds(savedBounds,true));}else{presentWindow(mainWindow,false,config.privacyEnabled!==false);if(savedBounds)mainWindow.setBounds(currentBounds(savedBounds));}privacy.apply(mainWindow);mainWindow.webContents.send('setup-mode',setupMode);liveView.webContents.setZoomFactor(setupMode?1:0.6);updateView();},onSelectFavorite:goToUrl,
   };
-  tray=createTray(callbacks,{...viewState(state),setupMode,favoriteSites:config.favoriteSites,version:app.getVersion()});updateView();
+  if(!smoke)tray=createTray(callbacks,{...viewState(state),setupMode,favoriteSites:config.favoriteSites,version:app.getVersion()});updateView();
   if(!smoke){let visible=false;for(let i=0;i<300;i++){if(safeWindow()&&mainWindow.isVisible()&&!mainWindow.webContents.isLoading()){visible=true;break;}await new Promise(r=>setTimeout(r,100));}if(!visible)throw Error('window-not-visible');}
   await confirmRestart(app,logger).catch(()=>record('warn','updater.receipt-failed'));if(!smoke)updater.check(false).catch(()=>{});
   privacy.schedule();

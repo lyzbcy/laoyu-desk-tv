@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24.21.0'
           cache: npm
       - run: npm ci
       - run: npm test
@@ -69,6 +69,7 @@ jobs:
             verification/ui-packaged/*
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ui-evidence-${{ runner.os }}
           path: verification/ui*/*

@@ -32,6 +32,7 @@ const emptyEl = document.getElementById('video-empty');
 
 let videos = [];
 let currentIndex = 0;
+let folderRevision=0;
 
 async function loadFolder() {
   const dir = await window.api.pickFolder();
@@ -41,7 +42,7 @@ async function loadFolder() {
 }
 
 async function openFolder(dir) {
-  videos = await window.api.scanVideos(dir);
+  const revision=++folderRevision;let scanned;try{scanned=await window.api.scanVideos(dir);}catch{if(revision===folderRevision)emptyEl.textContent='视频目录读取失败，请重新选择或检查访问权限';return;}if(revision!==folderRevision)return;videos=scanned;emptyEl.textContent='点击托盘图标选择视频文件夹';
   emptyEl.style.display = videos.length ? 'none' : 'flex';
   if (videos.length) play(videos[0], 0);
 }
@@ -87,6 +88,7 @@ function showAd() {
 }
 
 function applyState(payload) {
+  const update=payload.updater||{},settings=document.getElementById('open-controls');settings.textContent=update.available?'设置·新版':'设置';settings.title=update.available?(update.cached?'缓存中的新版，更新前会重新核实':'发现正式新版')+' '+update.version:'设置与遇到问题反馈';
   const state=payload.player,wasBoss=bossOn,wasLive=liveOn;
   bossOn=state.bossOn;liveOn=state.liveOn;videoEl.muted=state.effectiveLocalMuted;
   document.getElementById('sound-toggle').textContent=(liveOn?'直播':'本地')+'：'+((liveOn?state.liveMuted:state.localMuted)?'静音':'开声');
