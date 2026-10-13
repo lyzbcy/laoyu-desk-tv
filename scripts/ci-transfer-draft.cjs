@@ -1,0 +1,14 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process'),crypto=require('node:crypto');
+if(process.env.GITHUB_ACTIONS!=='true')throw Error('Hosted CI transfer only');
+const repo='lyzbcy/laoyu-desk-tv',run=process.env.DESK_TRANSFER_RUN;if(!/^\d+$/.test(run||''))throw Error('Exact successful build run required');
+const status=JSON.parse(cp.execFileSync('gh',['run','view',run,'-R',repo,'--json','conclusion,headSha'],{encoding:'utf8'}));if(status.conclusion!=='success')throw Error('Only successful build artifacts may be transferred');
+const root=path.resolve('verification/transfer-'+run);fs.mkdirSync(root,{recursive:true});const records=[];
+function walk(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())walk(file);else if(entry.isFile()&&/^laoyu-desk-tv-\d+\.\d+\.\d+-(win|mac)-(x64|arm64)(-update)?\.(exe|zip|dmg)$/.test(entry.name))records.push({file,name:entry.name})}}
+(async()=>{for(const os of ['Windows','macOS']){const folder=path.join(root,os);cp.execFileSync('gh',['run','download',run,'-R',repo,'-n','laoyu-desk-tv-'+os,'-D',folder],{stdio:'inherit',timeout:300000});walk(folder)}
+ if(records.length!==8||new Set(records.map(r=>r.name)).size!==8)throw Error('Exact eight native build assets required');const versions=new Set(records.map(r=>/^laoyu-desk-tv-(\d+\.\d+\.\d+)-/.exec(r.name)[1]));if(versions.size!==1)throw Error('Mixed version artifacts');const version=[...versions][0],tag='v'+version,release=JSON.parse(cp.execFileSync('gh',['release','view',tag,'-R',repo,'--json','isDraft'],{encoding:'utf8'}));if(!release.isDraft)throw Error('Never overwrite a public release');
+ for(const record of records){const hash=crypto.createHash('sha256');for await(const bytes of fs.createReadStream(record.file))hash.update(bytes);record.sha256=hash.digest('hex');record.size=fs.statSync(record.file).size;cp.execFileSync('gh',['release','upload',tag,record.file,'-R',repo],{stdio:'inherit',timeout:180000});}
+ const manifest=path.join(root,'SHA256SUMS-'+version+'.txt');fs.writeFileSync(manifest,records.map(r=>r.sha256+'  '+r.name).join('\n')+'\n');cp.execFileSync('gh',['release','upload',tag,manifest,'-R',repo],{stdio:'inherit'});
+ const publicState=JSON.parse(cp.execFileSync('gh',['release','view',tag,'-R',repo,'--json','assets,isDraft'],{encoding:'utf8'}));for(const r of records){const a=publicState.assets.find(a=>a.name===r.name);if(!a||a.digest!=='sha256:'+r.sha256||a.size!==r.size)throw Error('Uploaded draft bytes differ')}
+ fs.writeFileSync(path.join(root,'transfer.json'),JSON.stringify({status:'passed',version,run,sourceCommit:status.headSha,draft:true,assets:records.map(({file,...r})=>r)},null,2));console.log('DRAFT_TRANSFER_PASSED '+version);
+})().catch(e=>{console.error(e);process.exitCode=1});

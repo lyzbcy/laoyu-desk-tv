@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
+      transfer_run:
+        description: Transfer exact successful native build artifacts into an existing draft
+        default: ''
       installed_update:
         description: Verify actual installed Windows update in temporary VM
         type: boolean
@@ -27,7 +30,7 @@ permissions:
   contents: write
 jobs:
   desktop:
-    if: ${{ !inputs.installed_update }}
+    if: ${{ !inputs.installed_update && inputs.transfer_run == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -109,3 +112,24 @@ jobs:
         with:
           name: installed-update-${{ inputs.old_version }}-to-${{ inputs.new_version }}
           path: verification/installed-*/**
+  draft-transfer:
+    if: ${{ inputs.transfer_run != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.21.0'
+      - name: Transfer and hash exact native build assets, draft only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DESK_TRANSFER_RUN: ${{ inputs.transfer_run }}
+        run: node scripts/ci-transfer-draft.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: transfer-receipt
+          path: verification/transfer-*/transfer.json
