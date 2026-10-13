@@ -34,7 +34,8 @@ try{
  $step='install'
  if((Sha256 $p.file) -ne $p.sha256){throw 'package changed'}
  $installStarted=$true
- $installer=Start-Process -FilePath $p.file -ArgumentList @('/S',('/D='+$root)) -WindowStyle Hidden -Wait -PassThru
+ $installerArguments=@('/S');if(-not $desktopRequired){$installerArguments+='--no-desktop-shortcut'};$installerArguments+=('/D='+$root)
+ $installer=Start-Process -FilePath $p.file -ArgumentList $installerArguments -WindowStyle Hidden -Wait -PassThru
  if($installer.ExitCode -ne 0){throw 'installer failed'}
  $step='verify-version'
  $version=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion

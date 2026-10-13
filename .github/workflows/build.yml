@@ -30,6 +30,10 @@ on:
         description: Explicit candidate metadata fixture, never formal online discovery
         type: boolean
         default: false
+      desktop_shortcut:
+        description: Preserve installed baseline desktop shortcut choice
+        type: boolean
+        default: true
       upload_mac_draft:
         description: Upload verified Mac packages to an existing draft release
         type: boolean
@@ -114,6 +118,7 @@ jobs:
           DESK_OLD_VERSION: ${{ inputs.old_version }}
           DESK_NEW_VERSION: ${{ inputs.new_version }}
           DESK_METADATA_FIXTURE: ${{ inputs.metadata_fixture }}
+          DESK_DESKTOP: ${{ inputs.desktop_shortcut }}
         run: node scripts/ci-installed-update.cjs
       - uses: actions/upload-artifact@v4
         if: always()
