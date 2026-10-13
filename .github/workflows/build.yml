@@ -12,6 +12,10 @@ on:
         description: Verify actual installed Windows update in temporary VM
         type: boolean
         default: false
+      recovery_test:
+        description: Inject one post-install failure into a copied immutable helper on hosted Windows
+        type: boolean
+        default: false
       old_version:
         description: Exact immutable installed baseline
         default: '0.3.3'
@@ -30,7 +34,7 @@ permissions:
   contents: write
 jobs:
   desktop:
-    if: ${{ !inputs.installed_update && inputs.transfer_run == '' }}
+    if: ${{ !inputs.installed_update && !inputs.recovery_test && inputs.transfer_run == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -133,3 +137,25 @@ jobs:
         with:
           name: transfer-receipt
           path: verification/transfer-*/transfer.json
+  installed-recovery:
+    if: ${{ inputs.recovery_test }}
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.21.0'
+          cache: npm
+      - run: npm ci
+      - name: Real NSIS replacement and copied-helper failure recovery
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DESK_OLD_VERSION: ${{ inputs.old_version }}
+          DESK_NEW_VERSION: ${{ inputs.new_version }}
+        run: node scripts/ci-installed-recovery.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: installed-recovery-${{ inputs.old_version }}-to-${{ inputs.new_version }}
+          path: verification/recovery-*/**
