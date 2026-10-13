@@ -7,8 +7,10 @@ const { AD_TEMPLATES } = ads;
 describe('AD_TEMPLATES', () => {
   it('封面是打包页面内的离线素材，无网络依赖', () => {
     for (const ad of AD_TEMPLATES) {
-      expect(ad.cover).toMatch(/^assets\/[a-z-]+\.png$/);
-      expect(fs.existsSync(new URL('../src/renderer/' + ad.cover, import.meta.url))).toBe(true);
+      for (const product of ad.products) {
+        expect(product.icon).toMatch(/^assets\/promotion\/[a-z-]+\.png$/);
+        expect(fs.existsSync(new URL('../src/renderer/' + product.icon, import.meta.url))).toBe(true);
+      }
     }
   });
 
