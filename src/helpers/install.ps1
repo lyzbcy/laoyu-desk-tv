@@ -15,7 +15,7 @@ try{
  if($p.appId -ne 'com.laoyu.paidtowatch' -or $p.token -notmatch '^[a-f0-9-]{36}$' -or $p.version -notmatch '^\d+\.\d+\.\d+$' -or (Sha256 $p.file) -ne $p.sha256){throw 'invalid package'}
  $writeProbe=Join-Path $root ('.desk-update-write-'+[Guid]::NewGuid().ToString('N')+'.tmp');$probeStream=[IO.File]::Open($writeProbe,[IO.FileMode]::CreateNew);$probeStream.Dispose();[IO.File]::Delete($writeProbe)
  $registryBefore=@(Get-DeskTvRecords $root);$shortcutBefore=@{};$shortcutFiles=Get-DeskTvLinks;$shortcutBackup=Join-Path $job 'shortcut-backup';New-Item -ItemType Directory -Path $shortcutBackup -Force|Out-Null
- $oldVersion=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion -replace '\.0$',''
+ $oldVersion=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion -replace '^(\d+\.\d+\.\d+)\.0$','$1'
  foreach($link in $shortcutFiles){if(Test-Path -LiteralPath $link){if(-not [DeskTvInstallPaths]::Same([DeskTvInstallPaths]::LinkTarget($link),$exe)){throw 'custom shortcut target'};$saved=Join-Path $shortcutBackup ([Guid]::NewGuid().ToString('N')+'.lnk');Copy-Item -LiteralPath $link -Destination $saved;$shortcutBefore[$link]=$saved}}
  $desktopRequired=Test-Path -LiteralPath $shortcutFiles[1]
  New-Item -ItemType Directory -Path $backup -Force|Out-Null
